@@ -8,7 +8,7 @@ from datetime import date
 from value_scanner.calculator import value_percentage
 from value_scanner.models.basketball import away_win_probability, home_win_probability
 from value_scanner.models.poisson import calculate_probabilities, estimate_lambdas, fair_odds
-from value_scanner.pick_store import load_current_pick, save_current_pick
+from value_scanner.pick_store import get_or_create_today_pick, load_current_pick, save_current_pick
 from value_scanner.scrapers.espn import ESPN_SPORTS, EspnEvent, fetch_espn_events, fetch_team_win_rate
 from value_scanner.scrapers.fotmob import fetch_fixtures_for_dates
 
@@ -311,6 +311,10 @@ def get_active_pick() -> DailyPick | None:
     return load_current_pick()
 
 
+def get_today_pick() -> DailyPick | None:
+    return get_or_create_today_pick(find_daily_pick)
+
+
 def evaluate_novibet_odds(
     pick: DailyPick,
     novibet_odds: float,
@@ -369,9 +373,7 @@ def handle_user_message(text: str) -> str:
     """Agent entry point: odds number → verdict, otherwise today's pick."""
     odds = parse_odds_from_text(text.strip())
     if odds is not None and len(text.strip()) < 20:
-        pick = get_active_pick()
-        if pick is None:
-            pick = find_daily_pick(persist=True)
+        pick = get_today_pick()
         if pick is None:
             return "Δεν υπάρχει ενεργό pick. Ρώτα «σημερινό pick»."
         verdict = evaluate_novibet_odds(pick, odds)
@@ -382,7 +384,7 @@ def handle_user_message(text: str) -> str:
             f"Value: {verdict.value_pct:+.1f}%"
         )
 
-    pick = find_daily_pick(persist=True)
+    pick = get_today_pick()
     if pick is None:
         return "Δεν βρέθηκε pick σήμερα. Δοκίμασε αύριο."
     return (

@@ -22,6 +22,17 @@ def save_current_pick(pick: DailyPick, scan_date: date | None = None) -> Path:
     return PICK_PATH
 
 
+def get_pick_scan_date() -> date | None:
+    if not PICK_PATH.exists():
+        return None
+    try:
+        data = json.loads(PICK_PATH.read_text(encoding="utf-8"))
+        raw = data.get("scan_date")
+        return date.fromisoformat(raw) if raw else None
+    except (json.JSONDecodeError, ValueError, TypeError):
+        return None
+
+
 def load_current_pick() -> DailyPick | None:
     from value_scanner.daily_pick import DailyPick
 
@@ -45,3 +56,12 @@ def load_current_pick() -> DailyPick | None:
         expected_goals=data.get("expected_goals"),
         novibet_path=data.get("novibet_path", ""),
     )
+
+
+def get_or_create_today_pick(scanner):
+    """Return saved pick for today, or run scanner once."""
+    saved = load_current_pick()
+    saved_date = get_pick_scan_date()
+    if saved and saved_date == date.today():
+        return saved
+    return scanner(persist=True)
