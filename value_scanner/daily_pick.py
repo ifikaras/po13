@@ -8,6 +8,7 @@ from datetime import date
 from value_scanner.calculator import value_percentage
 from value_scanner.models.basketball import away_win_probability, home_win_probability
 from value_scanner.models.poisson import calculate_probabilities, estimate_lambdas, fair_odds
+from value_scanner.bankroll import load_bankroll
 from value_scanner.pick_store import get_or_create_today_pick, load_current_pick, save_current_pick
 from value_scanner.professional import MIN_ODDS, pick_preference_bonus, required_edge_pct
 from value_scanner.scrapers.espn import ESPN_SPORTS, EspnEvent, fetch_espn_events, fetch_team_win_rate
@@ -365,6 +366,10 @@ def parse_odds_from_text(text: str) -> float | None:
 
 def handle_user_message(text: str) -> str:
     """Agent entry point: odds number → verdict, otherwise today's pick."""
+    low = text.strip().lower()
+    if any(k in low for k in ("καβα", "καβά", "bankroll", "στοιχηματα", "στοιχήματα")):
+        return load_bankroll().summary_greek()
+
     odds = parse_odds_from_text(text.strip())
     if odds is not None and len(text.strip()) < 20:
         pick = get_today_pick()
