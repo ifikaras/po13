@@ -8,7 +8,7 @@ from datetime import date, datetime
 from value_scanner.daily_pick import (
     evaluate_novibet_odds,
     find_daily_pick,
-    get_active_pick,
+    get_today_pick,
     parse_odds_from_text,
 )
 
@@ -22,7 +22,7 @@ def main() -> int:
             print("ERROR: invalid odds")
             return 1
 
-        pick = get_active_pick() or find_daily_pick(persist=True)
+        pick = get_today_pick()
         if pick is None:
             print("ERROR: no pick found")
             return 1
