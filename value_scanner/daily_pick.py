@@ -1,0 +1,272 @@
+"""Agent-run daily pick — user never touches code or config."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from datetime import date
+
+from value_scanner.calculator import value_percentage
+from value_scanner.models.poisson import calculate_probabilities, estimate_lambdas, fair_odds
+from value_scanner.scrapers.fotmob import fetch_fixtures_for_dates
+
+# Leagues typically listed on Novibet Greece (football focus).
+NOVIBET_COUNTRY_CODES = {"ENG", "ESP", "GER", "ITA", "FRA", "NED", "POR", "GRE", "SCO", "BEL", "INT", "USA"}
+NOVIBET_LEAGUE_HINTS = (
+    "premier league",
+    "laliga",
+    "bundesliga",
+    "serie a",
+    "ligue 1",
+    "eredivisie",
+    "liga portugal",
+    "super league 1",
+    "championship",
+    "champions league",
+    "europa league",
+    "conference league",
+    "nba",
+    "euroleague",
+    "copa",
+    "mls",
+)
+
+EXCLUDE_LEAGUE_HINTS = (
+    "egypt",
+    "ukraine",
+    "belarus",
+    "tanzania",
+    "northern super",
+    "wales cymru",
+    "premier league canada",
+)
+
+
+@dataclass(frozen=True)
+class DailyPick:
+    sport: str
+    league: str
+    home: str
+    away: str
+    kickoff_utc: str
+    market: str
+    selection: str
+    model_probability: float
+    fair_odds: float
+    expected_goals: str | None
+    novibet_path: str
+
+    def summary_greek(self) -> str:
+        return (
+            f"{'Ποδόσφαιρο' if self.sport == 'football' else self.sport} — {self.league}\n"
+            f"Αγώνας: {self.home} vs {self.away}\n"
+            f"Market: {self.market} → {self.selection}\n"
+            f"Fair odds (μοντέλο): {self.fair_odds:.2f} ({self.model_probability:.1f}%)\n"
+            f"Novibet: {self.novibet_path}\n"
+            f"Ώρα (UTC): {self.kickoff_utc}"
+        )
+
+
+@dataclass(frozen=True)
+class OddsVerdict:
+    novibet_odds: float
+    value_pct: float
+    should_play: bool
+    reason: str
+
+
+MARKET_ROWS = [
+    ("Over/Under", "Over 2.5", "over_25", "over_25"),
+    ("Over/Under", "Under 2.5", "under_25", "under_25"),
+    ("BTTS", "Yes", "btts_yes", "btts_yes"),
+    ("BTTS", "No", "btts_no", "btts_no"),
+    ("1X2", "Home Win", "home_win", "home_win"),
+    ("1X2", "Away Win", "away_win", "away_win"),
+    ("Double Chance", "1X", "dc_1x", "dc_1x"),
+    ("Double Chance", "X2", "dc_x2", "dc_x2"),
+]
+
+NOVIBET_PATHS = {
+    ("BTTS", "Yes"): "Και οι δύο ομάδες να σκοράρουν → Ναι",
+    ("BTTS", "No"): "Και οι δύο ομάδες να σκοράρουν → Όχι",
+    ("Over/Under", "Over 2.5"): "Σύνολο γκολ → Over 2.5",
+    ("Over/Under", "Under 2.5"): "Σύνολο γκολ → Under 2.5",
+    ("1X2", "Home Win"): "Τελικό αποτέλεσμα → 1 (εντός)",
+    ("1X2", "Away Win"): "Τελικό αποτέλεσμα → 2 (εκτός)",
+    ("Double Chance", "1X"): "Διπλή ευκαιρία → 1X",
+    ("Double Chance", "X2"): "Διπλή ευκαιρία → X2",
+}
+
+
+def _is_novibet_likely(league: str, league_code: str) -> bool:
+    low = league.lower()
+    if any(ex in low for ex in EXCLUDE_LEAGUE_HINTS):
+        return False
+
+    strict_pairs = [
+        ("ENG", "premier league"),
+        ("ESP", "laliga"),
+        ("GER", "bundesliga"),
+        ("ITA", "serie a"),
+        ("FRA", "ligue 1"),
+        ("NED", "eredivisie"),
+        ("POR", "liga portugal"),
+        ("GRE", "super league"),
+    ]
+    for code, hint in strict_pairs:
+        if league_code == code and hint in low:
+            return True
+
+    if league_code == "INT" and any(x in low for x in ("champions", "europa", "conference")):
+        return True
+
+    if league_code == "ENG" and "championship" in low:
+        return True
+
+    return False
+
+
+def _league_tier(league: str) -> int:
+    low = league.lower()
+    if "2. bundesliga" in low or "2. laliga" in low or "serie b" in low:
+        return 3
+    if "premier league" in low and "championship" not in low and "scotland" not in low:
+        return 10
+    if "champions league" in low:
+        return 9
+    if low == "bundesliga" or ( "bundesliga" in low and "2." not in low ):
+        return 8
+    if "laliga" in low and "2." not in low:
+        return 8
+    if "serie a" in low and "serie b" not in low:
+        return 8
+    if "ligue 1" in low and "ligue 2" not in low:
+        return 7
+    if "eredivisie" in low:
+        return 7
+    if "super league 1" in low or "greek" in low:
+        return 7
+    if "europa league" in low or "conference league" in low:
+        return 6
+    if "championship" in low:
+        return 5
+    if "liga portugal" in low:
+        return 4
+    return 0
+
+
+def _pick_score(model_prob: float, league: str) -> float:
+    return model_prob + _league_tier(league) * 0.005
+
+
+def find_daily_pick(
+    scan_date: date | None = None,
+    min_odds: float = 1.70,
+    max_odds: float = 1.85,
+    min_form_matches: int = 3,
+    scan_days: int = 2,
+) -> DailyPick | None:
+    scan_date = scan_date or date.today()
+    fixtures = fetch_fixtures_for_dates(
+        scan_date,
+        days=scan_days,
+        major_only=True,
+        form_limit=5,
+    )
+
+    best: tuple[float, DailyPick] | None = None
+
+    for enriched in fixtures:
+        if not _is_novibet_likely(enriched.league, enriched.league_code):
+            continue
+        if enriched.home_form.matches_used < min_form_matches:
+            continue
+        if enriched.away_form.matches_used < min_form_matches:
+            continue
+
+        lambda_home, lambda_away = estimate_lambdas(
+            enriched.home_form.scored,
+            enriched.home_form.conceded,
+            enriched.away_form.scored,
+            enriched.away_form.conceded,
+        )
+        probabilities = calculate_probabilities(lambda_home, lambda_away)
+
+        for market, selection, prob_attr, _ in MARKET_ROWS:
+            model_prob = float(getattr(probabilities, prob_attr))
+            fair = fair_odds(model_prob)
+            if fair is None or fair < min_odds or fair > max_odds:
+                continue
+
+            pick = DailyPick(
+                sport="football",
+                league=enriched.league,
+                home=enriched.home_name,
+                away=enriched.away_name,
+                kickoff_utc=enriched.kickoff_utc,
+                market=market,
+                selection=selection,
+                model_probability=round(model_prob * 100, 1),
+                fair_odds=float(fair),
+                expected_goals=f"{lambda_home:.2f} - {lambda_away:.2f}",
+                novibet_path=NOVIBET_PATHS.get((market, selection), f"{market} / {selection}"),
+            )
+
+            score = _pick_score(model_prob, enriched.league)
+            if best is None or score > best[0]:
+                best = (score, pick)
+
+    return best[1] if best else None
+
+
+def evaluate_novibet_odds(
+    pick: DailyPick,
+    novibet_odds: float,
+    min_value_pct: float = 3.0,
+    min_odds: float = 1.70,
+    max_odds: float = 1.85,
+) -> OddsVerdict:
+    model_prob = pick.model_probability / 100.0
+    value_pct = value_percentage(model_prob, novibet_odds)
+
+    if novibet_odds < min_odds:
+        return OddsVerdict(
+            novibet_odds=novibet_odds,
+            value_pct=round(value_pct, 1),
+            should_play=False,
+            reason=f"SKIP — απόδοση {novibet_odds} κάτω από {min_odds}.",
+        )
+
+    if novibet_odds > max_odds:
+        return OddsVerdict(
+            novibet_odds=novibet_odds,
+            value_pct=round(value_pct, 1),
+            should_play=False,
+            reason=f"SKIP — απόδοση {novibet_odds} πάνω από {max_odds} (υψηλό ρίσκο).",
+        )
+
+    if value_pct >= min_value_pct:
+        return OddsVerdict(
+            novibet_odds=novibet_odds,
+            value_pct=round(value_pct, 1),
+            should_play=True,
+            reason=f"ΠΑΙΞΕ — value +{value_pct:.1f}% (μοντέλο {pick.model_probability}% × {novibet_odds}).",
+        )
+
+    return OddsVerdict(
+        novibet_odds=novibet_odds,
+        value_pct=round(value_pct, 1),
+        should_play=False,
+        reason=f"SKIP — value {value_pct:+.1f}% (χρειάζεται ≥ +{min_value_pct}%).",
+    )
+
+
+def parse_odds_from_text(text: str) -> float | None:
+    import re
+
+    match = re.search(r"(\d+[.,]\d+)", text.replace(",", "."))
+    if not match:
+        return None
+    try:
+        return float(match.group(1))
+    except ValueError:
+        return None

@@ -1,7 +1,22 @@
-matches:
-- away: Nottingham Forest
-  home: Liverpool
-  odds:
-    btts_no: 1.84
-    over_25: 1.78
-  sport: football
+# Novibet — βάλε εδώ ό,τι βλέπεις στο novibet.gr και θέλεις να ποντάρεις.
+# Δεν έχει σημασία πρωτάθλημα ή άθλημα — ό,τι παίζεις στη Novibet.
+#
+# Παράδειγμα (ποδόσφαιρο):
+# matches:
+#   - home: "Liverpool"
+#     away: "Nottingham Forest"
+#     sport: football
+#     odds:
+#       btts_no: 1.84
+#       over_25: 1.78
+#
+# Παράδειγμα (μπάσκετ — χωρίς μοντέλο, βάζεις τη δική σου πιθανότητα):
+#   - home: "Lakers"
+#     away: "Celtics"
+#     sport: basketball
+#     odds:
+#       home_win: 1.75
+#     model_probability:
+#       home_win: 0.58
+
+matches: []

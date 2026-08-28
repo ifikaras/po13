@@ -1,57 +1,28 @@
 # po13
 
-## Value Bet Scanner (Novibet-first)
+## Daily Value Bet (Novibet) — zero setup for you
 
-Σαρώνει **μόνο ό,τι παίζεις στη Novibet** — δεν έχει σημασία πρωτάθλημα ή άθλημα.
+**You do nothing technical.** No code, no config files.
 
-### Ροή καθημερινά
+### Your daily workflow
 
-1. Άνοιξε **novibet.gr** και διάλεξε στοίχημα (ποδόσφαιρο, μπάσκετ, τένις, ό,τι έχεις)
-2. Πρόσθεσέ το στο `config/novibet.yaml` με τις αποδόσεις Novibet
-3. Τρέξε:
+1. Message here: **«σημερινό pick»** or **«τι παίζω;»**
+2. Agent replies: sport, match, market, fair odds, where to find it on Novibet
+3. You check Novibet and reply with the odds (e.g. `1.84`)
+4. Agent replies: **ΠΑΙΞΕ** or **SKIP** (value formula)
 
-```bash
-pip install -r requirements.txt
-python -m value_scanner.cli
-```
+### What the agent does automatically
 
-### Παράδειγμα `config/novibet.yaml`
+- Scans upcoming football fixtures (major leagues on Novibet)
+- Poisson model + FotMob stats
+- Picks one bet in odds range **1.70–1.85** with best edge
+- Evaluates value when you report Novibet odds
 
-```yaml
-matches:
-  - home: "Liverpool"
-    away: "Nottingham Forest"
-    sport: football
-    odds:
-      btts_no: 1.84
+### Limitations
 
-  - home: "Lakers"
-    away: "Celtics"
-    sport: basketball
-    odds:
-      home_win: 1.75
-    model_probability:
-      home_win: 0.58   # δική σου εκτίμηση για non-football
-```
-
-### Αυτόματες αποδόσεις Novibet (προαιρετικό)
-
-```bash
-export ODDS_API_IO_KEY=your_key   # odds-api.io — δωρεάν tier
-python -m value_scanner.cli
-```
-
-### Εντολές
-
-```bash
-python -m value_scanner.cli --list-novibet    # τι έχει φορτωθεί
-python -m value_scanner.cli --json            # JSON output
-python -m value_scanner.cli --date 2026-08-29
-```
+- **Novibet odds:** agent cannot read Novibet directly (bot block). You check the app once (~30 sec).
+- **Football:** full statistical model. Other sports: ask agent for a pick when basketball/NBA is in season.
 
 ### Value formula
 
-`(model_probability × odds - 1) × 100`
-
-- **Ποδόσφαιρο:** στατιστικά από FotMob + Poisson μοντέλο
-- **Άλλα αθλήματα:** βάζεις `model_probability` χειροκίνητα
+`(model_probability × odds - 1) × 100` — play if ≥ +3%
