@@ -73,8 +73,11 @@ class BankrollState:
             lines.append("")
             lines.append("ΕΝΕΡΓΑ ΣΤΟΙΧΗΜΑΤΑ:")
             for b in self.open_bets:
+                kick = ""
+                if b.kickoff_utc:
+                    kick = f" ({b.kickoff_utc[:10]})"
                 lines.append(
-                    f"• {b.match} — {b.market} {b.selection} "
+                    f"• {b.match}{kick} — {b.market} {b.selection} "
                     f"€{b.stake:.2f} @ {b.odds} (επιστροφή €{b.potential_return:.2f})"
                 )
         if self.settled_bets:
