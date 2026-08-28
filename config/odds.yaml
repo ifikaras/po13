@@ -1,0 +1,16 @@
+# Manual odds overrides — paste bookmaker odds here for value calculation.
+# Keys: "Home Team vs Away Team" (as shown by scanner)
+#
+# Example:
+# matches:
+#   "Liverpool vs Nottingham Forest":
+#     over_25: 1.78
+#     btts_yes: 1.72
+#     home_win: 1.75
+
+matches:
+  "Liverpool vs Nottingham Forest":
+    over_25: 1.82
+    btts_yes: 1.75
+    btts_no: 1.84
+    home_win: 1.55
