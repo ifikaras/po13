@@ -1,0 +1,7 @@
+matches:
+- away: Nottingham Forest
+  home: Liverpool
+  odds:
+    btts_no: 1.84
+    over_25: 1.78
+  sport: football

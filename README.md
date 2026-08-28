@@ -1,31 +1,57 @@
 # po13
 
-## Value Bet Scanner
+## Value Bet Scanner (Novibet-first)
 
-Daily scanner that pulls team form from FotMob, estimates goal probabilities with a Poisson model, and flags value bets when bookmaker odds are available.
+Σαρώνει **μόνο ό,τι παίζεις στη Novibet** — δεν έχει σημασία πρωτάθλημα ή άθλημα.
 
-### Setup
+### Ροή καθημερινά
+
+1. Άνοιξε **novibet.gr** και διάλεξε στοίχημα (ποδόσφαιρο, μπάσκετ, τένις, ό,τι έχεις)
+2. Πρόσθεσέ το στο `config/novibet.yaml` με τις αποδόσεις Novibet
+3. Τρέξε:
 
 ```bash
 pip install -r requirements.txt
+python -m value_scanner.cli
 ```
 
-Optional: set `THE_ODDS_API_KEY` for automatic odds (free tier at the-odds-api.com), or add manual odds in `config/odds.yaml`.
-
-### Run
-
-```bash
-python -m value_scanner.cli --date 2026-08-29
-python -m value_scanner.cli --json
-```
-
-### Manual odds example (`config/odds.yaml`)
+### Παράδειγμα `config/novibet.yaml`
 
 ```yaml
 matches:
-  "Liverpool vs Nottingham Forest":
-    over_25: 1.78
-    btts_yes: 1.72
+  - home: "Liverpool"
+    away: "Nottingham Forest"
+    sport: football
+    odds:
+      btts_no: 1.84
+
+  - home: "Lakers"
+    away: "Celtics"
+    sport: basketball
+    odds:
+      home_win: 1.75
+    model_probability:
+      home_win: 0.58   # δική σου εκτίμηση για non-football
 ```
 
-Value formula: `(model_probability × odds - 1) × 100`
+### Αυτόματες αποδόσεις Novibet (προαιρετικό)
+
+```bash
+export ODDS_API_IO_KEY=your_key   # odds-api.io — δωρεάν tier
+python -m value_scanner.cli
+```
+
+### Εντολές
+
+```bash
+python -m value_scanner.cli --list-novibet    # τι έχει φορτωθεί
+python -m value_scanner.cli --json            # JSON output
+python -m value_scanner.cli --date 2026-08-29
+```
+
+### Value formula
+
+`(model_probability × odds - 1) × 100`
+
+- **Ποδόσφαιρο:** στατιστικά από FotMob + Poisson μοντέλο
+- **Άλλα αθλήματα:** βάζεις `model_probability` χειροκίνητα

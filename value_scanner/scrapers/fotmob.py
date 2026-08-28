@@ -176,9 +176,78 @@ def _prefetch_team_forms(team_ids: set[int]) -> None:
             future.result()
 
 
+def fetch_fixture_index(
+    scan_date: date | None = None,
+    major_only: bool = False,
+) -> list[Fixture]:
+    """Lightweight fixture list without team form (fast)."""
+    scan_date = scan_date or date.today()
+    payload = get_json(f"https://www.fotmob.com/api/data/matches?date={_format_date(scan_date)}")
+    fixtures: list[Fixture] = []
+
+    for league in payload.get("leagues", []):
+        if major_only and not _is_major_league(league):
+            continue
+
+        for match in league.get("matches", []):
+            status = match.get("status") or {}
+            if not _is_upcoming(status):
+                continue
+
+            home = match["home"]
+            away = match["away"]
+            fixtures.append(
+                Fixture(
+                    match_id=match["id"],
+                    league=league["name"],
+                    league_code=league.get("ccode") or "",
+                    kickoff_utc=status.get("utcTime") or match.get("time", ""),
+                    home_id=home["id"],
+                    home_name=home.get("longName") or home["name"],
+                    away_id=away["id"],
+                    away_name=away.get("longName") or away["name"],
+                    home_form=TeamFormStats(scored=0, conceded=0, matches_used=0),
+                    away_form=TeamFormStats(scored=0, conceded=0, matches_used=0),
+                )
+            )
+
+    fixtures.sort(key=lambda item: item.kickoff_utc)
+    return fixtures
+
+
+def enrich_fixture(fixture: Fixture, form_limit: int = 5) -> Fixture:
+    """Attach team form stats to a lightweight fixture."""
+    home_form_raw = list(_fetch_team_form(fixture.home_id))
+    away_form_raw = list(_fetch_team_form(fixture.away_id))
+    return Fixture(
+        match_id=fixture.match_id,
+        league=fixture.league,
+        league_code=fixture.league_code,
+        kickoff_utc=fixture.kickoff_utc,
+        home_id=fixture.home_id,
+        home_name=fixture.home_name,
+        away_id=fixture.away_id,
+        away_name=fixture.away_name,
+        home_form=_team_form_stats(fixture.home_id, "home", home_form_raw, form_limit),
+        away_form=_team_form_stats(fixture.away_id, "away", away_form_raw, form_limit),
+    )
+
+
+def fetch_fixture_index_for_dates(
+    start: date,
+    days: int = 1,
+    major_only: bool = False,
+) -> list[Fixture]:
+    fixtures: list[Fixture] = []
+    for offset in range(days):
+        day = date.fromordinal(start.toordinal() + offset)
+        fixtures.extend(fetch_fixture_index(day, major_only=major_only))
+    return fixtures
+
+
 def fetch_upcoming_fixtures(
     scan_date: date | None = None,
-    major_only: bool = True,
+    major_only: bool = False,
     form_limit: int = 5,
 ) -> list[Fixture]:
     scan_date = scan_date or date.today()
@@ -234,7 +303,7 @@ def fetch_upcoming_fixtures(
 def fetch_fixtures_for_dates(
     start: date,
     days: int = 2,
-    major_only: bool = True,
+    major_only: bool = False,
     form_limit: int = 5,
 ) -> list[Fixture]:
     fixtures: list[Fixture] = []
