@@ -363,3 +363,30 @@ def parse_odds_from_text(text: str) -> float | None:
         return float(match.group(1))
     except ValueError:
         return None
+
+
+def handle_user_message(text: str) -> str:
+    """Agent entry point: odds number → verdict, otherwise today's pick."""
+    odds = parse_odds_from_text(text.strip())
+    if odds is not None and len(text.strip()) < 20:
+        pick = get_active_pick()
+        if pick is None:
+            pick = find_daily_pick(persist=True)
+        if pick is None:
+            return "Δεν υπάρχει ενεργό pick. Ρώτα «σημερινό pick»."
+        verdict = evaluate_novibet_odds(pick, odds)
+        return (
+            f"{pick.home} vs {pick.away}\n"
+            f"{pick.market} / {pick.selection}\n"
+            f"{verdict.reason}\n"
+            f"Value: {verdict.value_pct:+.1f}%"
+        )
+
+    pick = find_daily_pick(persist=True)
+    if pick is None:
+        return "Δεν βρέθηκε pick σήμερα. Δοκίμασε αύριο."
+    return (
+        f"ΣΗΜΕΡΙΝΟ PICK\n\n{pick.summary_greek()}\n\n"
+        f"Τσέκαρε Novibet και στείλε μου την απόδοση (π.χ. 1.80).\n"
+        f"Παίξε αν ≥ {pick.fair_odds:.2f} και value ≥ +3%."
+    )
