@@ -15,8 +15,18 @@
 
 - Scans upcoming football fixtures (major leagues on Novibet)
 - Poisson model + FotMob stats
-- Picks one bet in odds range **1.70–1.85** with best edge
+- Picks one bet with best model edge (no hard odds cap — edge tiers decide PLAY/SKIP)
 - Evaluates value when you report Novibet odds
+
+### Professional gates (not a 1.70–1.85 cap)
+
+| Odds | Min edge to PLAY |
+|------|------------------|
+| 1.40 – 2.50 | +3% |
+| 2.50 – 4.00 | +5% |
+| 4.00+ | +8% |
+
+Preferred daily-pick band: **1.70–2.50** (stability), but higher odds are fine if edge is strong.
 
 ### Limitations
 
@@ -25,4 +35,4 @@
 
 ### Value formula
 
-`(model_probability × odds - 1) × 100` — play if ≥ +3%
+`(model_probability × odds - 1) × 100` — PLAY if edge meets the tier for that odds (see table above)

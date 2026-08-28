@@ -30,14 +30,19 @@ def evaluate_market(
     model_probability: float,
     odds: float,
     min_odds: float,
-    max_odds: float,
+    max_odds: float | None,
     min_value_pct: float,
 ) -> ValueBet | None:
-    if odds < min_odds or odds > max_odds:
+    from value_scanner.professional import required_edge_pct
+
+    if odds < min_odds:
+        return None
+    if max_odds is not None and odds > max_odds:
         return None
 
     value_pct = value_percentage(model_probability, odds)
-    if value_pct < min_value_pct:
+    threshold = max(min_value_pct, required_edge_pct(odds))
+    if value_pct < threshold:
         return None
 
     return ValueBet(

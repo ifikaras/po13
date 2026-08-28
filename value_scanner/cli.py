@@ -102,8 +102,13 @@ def main() -> int:
         description="Novibet value bet scanner — ό,τι παίζεις στη Novibet, όχι συγκεκριμένα πρωταθλήματα"
     )
     parser.add_argument("--date", help="Scan date YYYY-MM-DD (default: today)")
-    parser.add_argument("--min-odds", type=float, default=1.70)
-    parser.add_argument("--max-odds", type=float, default=1.85)
+    parser.add_argument("--min-odds", type=float, default=1.40)
+    parser.add_argument(
+        "--max-odds",
+        type=float,
+        default=None,
+        help="Optional upper odds cap (default: none — edge tiers decide plays)",
+    )
     parser.add_argument("--min-value", type=float, default=3.0, help="Minimum value %%")
     parser.add_argument("--days", type=int, default=1, help="Days ahead to scan")
     parser.add_argument("--min-form", type=int, default=3, help="Minimum home/away form matches")
@@ -194,7 +199,8 @@ def main() -> int:
 
     mode = "Novibet-only" if config.novibet_only else "All football"
     print(f"Value Bet Scanner | {scan_date.isoformat()} | {mode} | {len(results)} matches")
-    print(f"Filters: odds {config.min_odds}-{config.max_odds} | min value +{config.min_value_pct}%")
+    odds_range = f"{config.min_odds}+" if config.max_odds is None else f"{config.min_odds}-{config.max_odds}"
+    print(f"Filters: odds {odds_range} | min value +{config.min_value_pct}% (+ tier thresholds)")
 
     if not results:
         print("\nΔεν βρέθηκαν αγώνες Novibet για ανάλυση.")

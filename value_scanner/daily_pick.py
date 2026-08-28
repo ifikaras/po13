@@ -9,6 +9,7 @@ from value_scanner.calculator import value_percentage
 from value_scanner.models.basketball import away_win_probability, home_win_probability
 from value_scanner.models.poisson import calculate_probabilities, estimate_lambdas, fair_odds
 from value_scanner.pick_store import get_or_create_today_pick, load_current_pick, save_current_pick
+from value_scanner.professional import MIN_ODDS, pick_preference_bonus, required_edge_pct
 from value_scanner.scrapers.espn import ESPN_SPORTS, EspnEvent, fetch_espn_events, fetch_team_win_rate
 from value_scanner.scrapers.fotmob import fetch_fixtures_for_dates
 
@@ -165,14 +166,13 @@ def _league_tier(league: str) -> int:
     return 0
 
 
-def _pick_score(model_prob: float, league: str) -> float:
-    return model_prob + _league_tier(league) * 0.005
+def _pick_score(model_prob: float, league: str, fair: float) -> float:
+    return model_prob + _league_tier(league) * 0.005 + pick_preference_bonus(fair)
 
 
 def _find_football_pick(
     scan_date: date,
     min_odds: float,
-    max_odds: float,
     min_form_matches: int,
     scan_days: int,
 ) -> tuple[float, DailyPick] | None:
@@ -204,7 +204,7 @@ def _find_football_pick(
         for market, selection, prob_attr, _ in MARKET_ROWS:
             model_prob = float(getattr(probabilities, prob_attr))
             fair = fair_odds(model_prob)
-            if fair is None or fair < min_odds or fair > max_odds:
+            if fair is None or fair < min_odds:
                 continue
 
             pick = DailyPick(
@@ -221,7 +221,7 @@ def _find_football_pick(
                 novibet_path=NOVIBET_PATHS.get((market, selection), f"{market} / {selection}"),
             )
 
-            score = _pick_score(model_prob, enriched.league)
+            score = _pick_score(model_prob, enriched.league, float(fair))
             if best is None or score > best[0]:
                 best = (score, pick)
 
@@ -231,7 +231,6 @@ def _find_football_pick(
 def _find_basketball_pick(
     scan_date: date,
     min_odds: float,
-    max_odds: float,
 ) -> tuple[float, DailyPick] | None:
     best: tuple[float, DailyPick] | None = None
 
@@ -252,7 +251,7 @@ def _find_basketball_pick(
         ]:
             model_prob = float(prob_fn(home_rate, away_rate))
             fair = fair_odds(model_prob)
-            if fair is None or fair < min_odds or fair > max_odds:
+            if fair is None or fair < min_odds:
                 continue
 
             market = "Moneyline"
@@ -278,8 +277,7 @@ def _find_basketball_pick(
 
 def find_daily_pick(
     scan_date: date | None = None,
-    min_odds: float = 1.70,
-    max_odds: float = 1.85,
+    min_odds: float = MIN_ODDS,
     min_form_matches: int = 3,
     scan_days: int = 2,
     persist: bool = True,
@@ -287,11 +285,11 @@ def find_daily_pick(
     scan_date = scan_date or date.today()
 
     candidates: list[tuple[float, DailyPick]] = []
-    football = _find_football_pick(scan_date, min_odds, max_odds, min_form_matches, scan_days)
+    football = _find_football_pick(scan_date, min_odds, min_form_matches, scan_days)
     if football:
         candidates.append(football)
 
-    basketball = _find_basketball_pick(scan_date, min_odds, max_odds)
+    basketball = _find_basketball_pick(scan_date, min_odds)
     if basketball:
         candidates.append(basketball)
 
@@ -318,42 +316,38 @@ def get_today_pick() -> DailyPick | None:
 def evaluate_novibet_odds(
     pick: DailyPick,
     novibet_odds: float,
-    min_value_pct: float = 3.0,
-    min_odds: float = 1.70,
-    max_odds: float = 1.85,
+    min_value_pct: float | None = None,
+    min_odds: float = MIN_ODDS,
 ) -> OddsVerdict:
     model_prob = pick.model_probability / 100.0
     value_pct = value_percentage(model_prob, novibet_odds)
+    threshold = min_value_pct if min_value_pct is not None else required_edge_pct(novibet_odds)
 
     if novibet_odds < min_odds:
         return OddsVerdict(
             novibet_odds=novibet_odds,
             value_pct=round(value_pct, 1),
             should_play=False,
-            reason=f"SKIP — απόδοση {novibet_odds} κάτω από {min_odds}.",
+            reason=f"SKIP — απόδοση {novibet_odds} κάτω από {min_odds} (βαρύ φαβορί, αδύναμο edge).",
         )
 
-    if novibet_odds > max_odds:
-        return OddsVerdict(
-            novibet_odds=novibet_odds,
-            value_pct=round(value_pct, 1),
-            should_play=False,
-            reason=f"SKIP — απόδοση {novibet_odds} πάνω από {max_odds} (υψηλό ρίσκο).",
-        )
-
-    if value_pct >= min_value_pct:
+    if value_pct >= threshold:
         return OddsVerdict(
             novibet_odds=novibet_odds,
             value_pct=round(value_pct, 1),
             should_play=True,
-            reason=f"ΠΑΙΞΕ — value +{value_pct:.1f}% (μοντέλο {pick.model_probability}% × {novibet_odds}).",
+            reason=(
+                f"ΠΑΙΞΕ — value +{value_pct:.1f}% "
+                f"(μοντέλο {pick.model_probability}% × {novibet_odds}, "
+                f"όριο +{threshold:.0f}%)."
+            ),
         )
 
     return OddsVerdict(
         novibet_odds=novibet_odds,
         value_pct=round(value_pct, 1),
         should_play=False,
-        reason=f"SKIP — value {value_pct:+.1f}% (χρειάζεται ≥ +{min_value_pct}%).",
+        reason=f"SKIP — value {value_pct:+.1f}% (χρειάζεται ≥ +{threshold:.0f}% σε αυτή την απόδοση).",
     )
 
 

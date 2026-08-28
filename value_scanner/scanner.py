@@ -26,8 +26,8 @@ from value_scanner.scrapers.odds import MarketOdds, manual_odds_lookup
 
 @dataclass
 class ScanConfig:
-    min_odds: float = 1.70
-    max_odds: float = 1.85
+    min_odds: float = 1.40
+    max_odds: float | None = None  # None = no upper cap; edge tiers gate plays
     min_value_pct: float = 3.0
     major_only: bool = False
     form_limit: int = 5
@@ -104,7 +104,8 @@ def _evaluate_with_odds(
                     "selection": selection,
                     "probability_pct": round(model_prob * 100, 1),
                     "fair_odds": fair,
-                    "in_target_range": config.min_odds <= fair <= config.max_odds,
+                    "in_target_range": config.min_odds <= fair
+                    and (config.max_odds is None or fair <= config.max_odds),
                 }
             )
             book_odds = getattr(odds, odds_attr, None)
