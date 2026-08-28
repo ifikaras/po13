@@ -5,7 +5,12 @@ from __future__ import annotations
 import sys
 from datetime import date, datetime
 
-from value_scanner.daily_pick import evaluate_novibet_odds, find_daily_pick, parse_odds_from_text
+from value_scanner.daily_pick import (
+    evaluate_novibet_odds,
+    find_daily_pick,
+    get_active_pick,
+    parse_odds_from_text,
+)
 
 
 def main() -> int:
@@ -16,11 +21,15 @@ def main() -> int:
         if odds is None:
             print("ERROR: invalid odds")
             return 1
-        pick = find_daily_pick()
+
+        pick = get_active_pick() or find_daily_pick(persist=True)
         if pick is None:
             print("ERROR: no pick found")
             return 1
+
         verdict = evaluate_novibet_odds(pick, odds)
+        print(f"MATCH: {pick.home} vs {pick.away}")
+        print(f"MARKET: {pick.market} / {pick.selection}")
         print(verdict.reason)
         print(f"Value: {verdict.value_pct:+.1f}%")
         return 0
@@ -29,7 +38,7 @@ def main() -> int:
     if len(args) >= 2 and args[0] == "--date":
         scan_date = datetime.strptime(args[1], "%Y-%m-%d").date()
 
-    pick = find_daily_pick(scan_date=scan_date)
+    pick = find_daily_pick(scan_date=scan_date, persist=True)
     if pick is None:
         print("NO_PICK")
         return 1

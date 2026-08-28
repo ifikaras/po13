@@ -6,7 +6,10 @@ from dataclasses import dataclass
 from datetime import date
 
 from value_scanner.calculator import value_percentage
+from value_scanner.models.basketball import away_win_probability, home_win_probability
 from value_scanner.models.poisson import calculate_probabilities, estimate_lambdas, fair_odds
+from value_scanner.pick_store import load_current_pick, save_current_pick
+from value_scanner.scrapers.espn import ESPN_SPORTS, EspnEvent, fetch_espn_events, fetch_team_win_rate
 from value_scanner.scrapers.fotmob import fetch_fixtures_for_dates
 
 # Leagues typically listed on Novibet Greece (football focus).
@@ -56,8 +59,12 @@ class DailyPick:
     novibet_path: str
 
     def summary_greek(self) -> str:
+        sport_label = {
+            "football": "Ποδόσφαιρο",
+            "basketball": "Μπάσκετ",
+        }.get(self.sport, self.sport)
         return (
-            f"{'Ποδόσφαιρο' if self.sport == 'football' else self.sport} — {self.league}\n"
+            f"{sport_label} — {self.league}\n"
             f"Αγώνας: {self.home} vs {self.away}\n"
             f"Market: {self.market} → {self.selection}\n"
             f"Fair odds (μοντέλο): {self.fair_odds:.2f} ({self.model_probability:.1f}%)\n"
@@ -94,7 +101,11 @@ NOVIBET_PATHS = {
     ("1X2", "Away Win"): "Τελικό αποτέλεσμα → 2 (εκτός)",
     ("Double Chance", "1X"): "Διπλή ευκαιρία → 1X",
     ("Double Chance", "X2"): "Διπλή ευκαιρία → X2",
+    ("Moneyline", "Home Win"): "Νικητής → Εντός",
+    ("Moneyline", "Away Win"): "Νικητής → Εκτός",
 }
+
+ESPN_LEAGUE_PATH = {name: (sport, league) for sport, league, name in ESPN_SPORTS}
 
 
 def _is_novibet_likely(league: str, league_code: str) -> bool:
@@ -158,14 +169,13 @@ def _pick_score(model_prob: float, league: str) -> float:
     return model_prob + _league_tier(league) * 0.005
 
 
-def find_daily_pick(
-    scan_date: date | None = None,
-    min_odds: float = 1.70,
-    max_odds: float = 1.85,
-    min_form_matches: int = 3,
-    scan_days: int = 2,
-) -> DailyPick | None:
-    scan_date = scan_date or date.today()
+def _find_football_pick(
+    scan_date: date,
+    min_odds: float,
+    max_odds: float,
+    min_form_matches: int,
+    scan_days: int,
+) -> tuple[float, DailyPick] | None:
     fixtures = fetch_fixtures_for_dates(
         scan_date,
         days=scan_days,
@@ -215,7 +225,90 @@ def find_daily_pick(
             if best is None or score > best[0]:
                 best = (score, pick)
 
-    return best[1] if best else None
+    return best
+
+
+def _find_basketball_pick(
+    scan_date: date,
+    min_odds: float,
+    max_odds: float,
+) -> tuple[float, DailyPick] | None:
+    best: tuple[float, DailyPick] | None = None
+
+    for event in fetch_espn_events(scan_date):
+        paths = ESPN_LEAGUE_PATH.get(event.league)
+        if not paths:
+            continue
+        sport_path, league_path = paths
+
+        home_rate = fetch_team_win_rate(sport_path, league_path, event.home_id)
+        away_rate = fetch_team_win_rate(sport_path, league_path, event.away_id)
+        if home_rate is None or away_rate is None:
+            continue
+
+        for selection, prob_fn in [
+            ("Home Win", home_win_probability),
+            ("Away Win", away_win_probability),
+        ]:
+            model_prob = float(prob_fn(home_rate, away_rate))
+            fair = fair_odds(model_prob)
+            if fair is None or fair < min_odds or fair > max_odds:
+                continue
+
+            market = "Moneyline"
+            pick = DailyPick(
+                sport="basketball",
+                league=event.league,
+                home=event.home,
+                away=event.away,
+                kickoff_utc=event.kickoff_utc,
+                market=market,
+                selection=selection,
+                model_probability=round(model_prob * 100, 1),
+                fair_odds=float(fair),
+                expected_goals=f"win% {home_rate:.0%}-{away_rate:.0%}",
+                novibet_path=NOVIBET_PATHS.get((market, selection), f"Νικητής → {selection}"),
+            )
+            score = model_prob + 0.02  # slight bias to include basketball when strong
+            if best is None or score > best[0]:
+                best = (score, pick)
+
+    return best
+
+
+def find_daily_pick(
+    scan_date: date | None = None,
+    min_odds: float = 1.70,
+    max_odds: float = 1.85,
+    min_form_matches: int = 3,
+    scan_days: int = 2,
+    persist: bool = True,
+) -> DailyPick | None:
+    scan_date = scan_date or date.today()
+
+    candidates: list[tuple[float, DailyPick]] = []
+    football = _find_football_pick(scan_date, min_odds, max_odds, min_form_matches, scan_days)
+    if football:
+        candidates.append(football)
+
+    basketball = _find_basketball_pick(scan_date, min_odds, max_odds)
+    if basketball:
+        candidates.append(basketball)
+
+    if not candidates:
+        return None
+
+    candidates.sort(key=lambda item: item[0], reverse=True)
+    pick = candidates[0][1]
+
+    if persist:
+        save_current_pick(pick, scan_date)
+
+    return pick
+
+
+def get_active_pick() -> DailyPick | None:
+    return load_current_pick()
 
 
 def evaluate_novibet_odds(
