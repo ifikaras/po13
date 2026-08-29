@@ -1,7 +1,7 @@
 {
   "currency": "EUR",
   "starting_bankroll": 100.0,
-  "current_bankroll": 99.2,
+  "current_bankroll": 97.7,
   "open_bets": [
     {
       "id": "bet-2026-08-28-2",
@@ -26,6 +26,19 @@
       "odds": 2.03,
       "stake": 2.0,
       "kickoff_utc": "2026-08-29T16:30:00.000Z",
+      "status": "open",
+      "profit": 0.0
+    },
+    {
+      "id": "bet-2026-08-29-4",
+      "placed_date": "2026-08-29",
+      "match": "Sevilla vs Atlético Madrid",
+      "league": "LaLiga",
+      "market": "BTTS",
+      "selection": "Yes",
+      "odds": 1.88,
+      "stake": 1.5,
+      "kickoff_utc": "2026-08-29T19:30:00.000Z",
       "status": "open",
       "profit": 0.0
     }
