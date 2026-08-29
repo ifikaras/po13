@@ -1,0 +1,26 @@
+channel:
+  name: "Happy Little Learners"
+  tagline: "Fun learning for little kids!"
+  language: en-US
+  voice: en-US-JennyNeural
+  voice_intro: en-US-JennyNeural
+
+branding:
+  primary_color: "#FF6B9D"
+  secondary_color: "#4ECDC4"
+  accent_color: "#FFE66D"
+  background_color: "#FFF5F7"
+  font_title: "#2D3436"
+  font_subtitle: "#636E72"
+
+video:
+  width: 1920
+  height: 1080
+  fps: 30
+  max_duration_seconds: 240
+  intro_seconds: 8
+  outro_seconds: 10
+
+music:
+  volume_db: -22
+  voice_volume_db: 0

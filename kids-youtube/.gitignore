@@ -1,0 +1,7 @@
+# Generated cache (TTS audio, temp frames)
+**/.cache/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
