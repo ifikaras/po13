@@ -325,11 +325,14 @@ def evaluate_novibet_odds(
     market_probability: float | None = None,
     market_odds_full: list[float] | None = None,
     selection_index: int = 0,
+    use_pinnacle: bool = True,
 ) -> OddsVerdict:
     from value_scanner.market_anchor import evaluate_anchored_edge
+    from value_scanner.scrapers.pinnacle import find_sharp_line, sharp_probability_for_selection
 
     model_prob = pick.model_probability / 100.0
     raw_value = value_percentage(model_prob, novibet_odds)
+    sharp_note = ""
 
     if novibet_odds < min_odds:
         return OddsVerdict(
@@ -339,6 +342,30 @@ def evaluate_novibet_odds(
             reason=f"SKIP — απόδοση {novibet_odds} κάτω από {min_odds} (βαρύ φαβορί, αδύναμο edge).",
             model_probability=pick.model_probability,
         )
+
+    # Auto-anchor to Pinnacle when configured and caller did not pass a board.
+    if (
+        use_pinnacle
+        and market_probability is None
+        and market_odds_full is None
+    ):
+        try:
+            sharp = find_sharp_line(pick.home, pick.away, pick.sport)
+        except Exception:
+            sharp = None
+        if sharp:
+            mp, board, idx = sharp_probability_for_selection(
+                sharp, pick.market, pick.selection
+            )
+            if mp is not None:
+                market_probability = mp
+                sharp_note = f"Pinnacle fair {mp * 100:.1f}% ({sharp.source})"
+            elif board is not None:
+                market_odds_full = board
+                selection_index = idx
+                sharp_note = (
+                    f"Pinnacle board {board} idx={idx} ({sharp.home} vs {sharp.away})"
+                )
 
     should_play, value_pct, anchor, reason = evaluate_anchored_edge(
         model_prob,
@@ -350,6 +377,11 @@ def evaluate_novibet_odds(
         min_edge_pct=min_value_pct,
     )
 
+    if sharp_note:
+        reason = f"{reason} | {sharp_note}"
+        if anchor.note and "Sharp" not in reason:
+            reason = f"{reason} | {anchor.note}"
+
     return OddsVerdict(
         novibet_odds=novibet_odds,
         value_pct=value_pct,
@@ -357,7 +389,7 @@ def evaluate_novibet_odds(
         reason=reason,
         anchored_probability=round(anchor.anchored_probability * 100, 1),
         model_probability=pick.model_probability,
-        anchor_note=anchor.note,
+        anchor_note=f"{sharp_note} {anchor.note}".strip(),
     )
 
 
@@ -378,6 +410,10 @@ def handle_user_message(text: str) -> str:
     low = text.strip().lower()
     if any(k in low for k in ("καβα", "καβά", "bankroll", "στοιχηματα", "στοιχήματα")):
         return load_bankroll().summary_greek()
+    if any(k in low for k in ("pinnacle", "pinnapi", "sharp")):
+        from value_scanner.scrapers.pinnacle import status_report
+
+        return status_report()
 
     odds = parse_odds_from_text(text.strip())
     if odds is not None and len(text.strip()) < 20:

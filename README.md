@@ -30,6 +30,16 @@
 
 Preferred daily-pick band: **1.70–2.50** (stability), but higher odds are fine if *anchored* edge clears the tier.
 
+### Pinnacle sharp lines
+
+Official Pinnacle API is **closed to the public** (July 2025). We use **pinnapi** (Pinnacle feed mirror):
+
+1. Free key: https://pinnapi.com (100 REST req/day)
+2. Add Cursor secret: `PINNAPI_KEY`
+3. Agent auto-anchors Novibet offers to Pinnacle moneyline / totals / derived DC
+
+Without the key, soft-sanity market-anchor still runs (no sharp blend).
+
 ### Limitations
 
 - **Novibet odds:** agent cannot read Novibet directly (bot block). You check the app once (~30 sec).
