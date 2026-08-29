@@ -1,7 +1,7 @@
 {
   "currency": "EUR",
   "starting_bankroll": 100.0,
-  "current_bankroll": 101.2,
+  "current_bankroll": 99.2,
   "open_bets": [
     {
       "id": "bet-2026-08-28-2",
@@ -13,6 +13,19 @@
       "odds": 2.04,
       "stake": 1.5,
       "kickoff_utc": "2026-08-30T13:00:00.000Z",
+      "status": "open",
+      "profit": 0.0
+    },
+    {
+      "id": "bet-2026-08-29-3",
+      "placed_date": "2026-08-29",
+      "match": "Sassuolo vs Torino",
+      "league": "Serie A",
+      "market": "BTTS",
+      "selection": "No",
+      "odds": 2.03,
+      "stake": 2.0,
+      "kickoff_utc": "2026-08-29T16:30:00.000Z",
       "status": "open",
       "profit": 0.0
     }
