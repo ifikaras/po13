@@ -406,7 +406,14 @@ def parse_odds_from_text(text: str) -> float | None:
 
 
 def handle_user_message(text: str) -> str:
-    """Agent entry point: odds number → verdict, otherwise today's pick."""
+    """Agent entry point: scan board default; odds reply → verdict."""
+    from value_scanner.scan_board import (
+        find_candidate_by_index,
+        format_scan_board_greek,
+        get_or_build_today_board,
+        parse_user_odds_reply,
+    )
+
     low = text.strip().lower()
     if any(k in low for k in ("καβα", "καβά", "bankroll", "στοιχηματα", "στοιχήματα")):
         return load_bankroll().summary_greek()
@@ -415,31 +422,61 @@ def handle_user_message(text: str) -> str:
 
         return status_report()
 
-    odds = parse_odds_from_text(text.strip())
-    if odds is not None and len(text.strip()) < 20:
-        pick = get_today_pick()
-        if pick is None:
-            return "Δεν υπάρχει ενεργό pick. Ρώτα «σημερινό pick»."
-        verdict = evaluate_novibet_odds(pick, odds)
+    # User reply: "#5 2.03" or "5 BTTS No 2.03"
+    idx, odds_from_idx = parse_user_odds_reply(text)
+    board = get_or_build_today_board()
+    if idx is not None and odds_from_idx is not None:
+        candidate = find_candidate_by_index(board, idx)
+        if candidate is None:
+            return f"Δεν βρέθηκε #{idx}. Γράψε «σκαν» για νέα λίστα."
+        pick = DailyPick(
+            sport="football",
+            league=candidate.league,
+            home=candidate.home,
+            away=candidate.away,
+            kickoff_utc=candidate.kickoff_utc,
+            market=candidate.market,
+            selection=candidate.selection,
+            model_probability=candidate.model_probability,
+            fair_odds=candidate.fair_odds,
+            expected_goals=candidate.expected_goals,
+            novibet_path=candidate.novibet_path,
+        )
+        verdict = evaluate_novibet_odds(pick, odds_from_idx)
         lines = [
-            f"{pick.home} vs {pick.away}",
-            f"{pick.market} / {pick.selection}",
+            f"#{idx} {candidate.match_label}",
+            f"{candidate.market} / {candidate.selection}",
             verdict.reason,
             f"Anchored value: {verdict.value_pct:+.1f}%",
         ]
-        if verdict.anchored_probability is not None:
-            lines.append(
-                f"Μοντέλο {verdict.model_probability}% → anchored {verdict.anchored_probability}%"
-            )
         if verdict.anchor_note:
             lines.append(verdict.anchor_note)
         return "\n".join(lines)
 
-    pick = get_today_pick()
-    if pick is None:
-        return "Δεν βρέθηκε pick σήμερα. Δοκίμασε αύριο."
-    return (
-        f"ΣΗΜΕΡΙΝΟ PICK\n\n{pick.summary_greek()}\n\n"
-        f"Τσέκαρε Novibet και στείλε μου την απόδοση (π.χ. 1.80).\n"
-        f"Παίξε αν ≥ {pick.fair_odds:.2f} και value ≥ +3%."
-    )
+    odds = parse_odds_from_text(text.strip())
+    if odds is not None and len(text.strip()) < 20 and not any(
+        k in low for k in ("σκαν", "scan", "pick", "παιχν")
+    ):
+        # Bare number without index — use first upcoming on board or legacy pick
+        upcoming = [c for c in board if c.status == "ΕΠΟΜΕΝΟ"]
+        if len(upcoming) == 1:
+            return handle_user_message(f"{upcoming[0].index} {odds}")
+        pick = get_today_pick()
+        if pick is None:
+            return (
+                f"Απόδοση {odds} — πες μου και αριθμό ματς, π.χ. «5 {odds}».\n\n"
+                + format_scan_board_greek(board)
+            )
+        verdict = evaluate_novibet_odds(pick, odds)
+        return (
+            f"{pick.home} vs {pick.away}\n{pick.market} / {pick.selection}\n"
+            f"{verdict.reason}\nValue: {verdict.value_pct:+.1f}%"
+        )
+
+    # Default: full scan board (agent-initiated workflow)
+    if any(k in low for k in ("σκαν", "scan", "pick", "παιχν", "τι υπαρχει", "τι υπάρχει")) or len(text.strip()) < 30:
+        board = get_or_build_today_board()
+        return format_scan_board_greek(board)
+
+    board = get_or_build_today_board()
+    return format_scan_board_greek(board)

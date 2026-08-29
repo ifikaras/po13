@@ -6,10 +6,12 @@
 
 ### Your daily workflow
 
-1. Message here: **«σημερινό pick»** or **«τι παίζω;»**
-2. Agent replies: sport, match, market, fair odds, where to find it on Novibet
-3. You check Novibet and reply with the odds (e.g. `1.84`)
-4. Agent replies: **ΠΑΙΞΕ** or **SKIP** (value formula)
+1. **Agent scans** all Novibet-likely matches and sends numbered list
+2. You open Novibet and reply with odds: **`#5 BTTS Όχι 2.03`** or screenshot
+3. Agent replies: **ΠΑΙΞΕ** or **SKIP** (+ stake suggestion)
+4. Message **`καβά`** anytime for bankroll / open bets
+
+You do **not** need to suggest matches — the agent initiates the scan.
 
 ### What the agent does automatically
 
