@@ -32,7 +32,11 @@ def evaluate_market(
     min_odds: float,
     max_odds: float | None,
     min_value_pct: float,
+    market_probability: float | None = None,
+    market_odds_full: list[float] | None = None,
+    selection_index: int = 0,
 ) -> ValueBet | None:
+    from value_scanner.market_anchor import evaluate_anchored_edge
     from value_scanner.professional import required_edge_pct
 
     if odds < min_odds:
@@ -40,17 +44,25 @@ def evaluate_market(
     if max_odds is not None and odds > max_odds:
         return None
 
-    value_pct = value_percentage(model_probability, odds)
     threshold = max(min_value_pct, required_edge_pct(odds))
-    if value_pct < threshold:
+    should_play, value_pct, anchor, _reason = evaluate_anchored_edge(
+        model_probability,
+        odds,
+        market=market,
+        market_probability=market_probability,
+        market_odds_full=market_odds_full,
+        selection_index=selection_index,
+        min_edge_pct=threshold,
+    )
+    if not should_play:
         return None
 
     return ValueBet(
         market=market,
         selection=selection,
         odds=round(odds, 2),
-        model_probability=round(model_probability * 100, 1),
+        model_probability=round(anchor.anchored_probability * 100, 1),
         implied_probability=round(implied_probability(odds) * 100, 1),
         value_pct=round(value_pct, 1),
-        fair_odds=round(1.0 / model_probability, 2) if model_probability > 0 else 0.0,
+        fair_odds=anchor.fair_odds,
     )

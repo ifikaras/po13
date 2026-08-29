@@ -18,15 +18,17 @@
 - Picks one bet with best model edge (no hard odds cap — edge tiers decide PLAY/SKIP)
 - Evaluates value when you report Novibet odds
 
-### Professional gates (not a 1.70–1.85 cap)
+### Professional gates (market-anchored)
 
-| Odds | Min edge to PLAY |
-|------|------------------|
+| Odds | Min *anchored* edge to PLAY |
+|------|-----------------------------|
 | 1.40 – 2.50 | +3% |
 | 2.50 – 4.00 | +5% |
 | 4.00+ | +8% |
 
-Preferred daily-pick band: **1.70–2.50** (stability), but higher odds are fine if edge is strong.
+**Market-anchor (bookmaker mode):** model probability is shrunk toward the soft/sharp market. Raw model edges above **+12%** without market confirm are rejected. Model vs market divergence > **12pp** defers to market. Absolute believable edge cap: **+15%**.
+
+Preferred daily-pick band: **1.70–2.50** (stability), but higher odds are fine if *anchored* edge clears the tier.
 
 ### Limitations
 
@@ -35,4 +37,4 @@ Preferred daily-pick band: **1.70–2.50** (stability), but higher odds are fine
 
 ### Value formula
 
-`(model_probability × odds - 1) × 100` — PLAY if edge meets the tier for that odds (see table above)
+`(model_probability × odds - 1) × 100` after **market-anchor** — PLAY if anchored edge meets the tier for that odds (see table above)

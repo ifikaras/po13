@@ -81,6 +81,9 @@ class OddsVerdict:
     value_pct: float
     should_play: bool
     reason: str
+    anchored_probability: float | None = None
+    model_probability: float | None = None
+    anchor_note: str = ""
 
 
 MARKET_ROWS = [
@@ -319,36 +322,42 @@ def evaluate_novibet_odds(
     novibet_odds: float,
     min_value_pct: float | None = None,
     min_odds: float = MIN_ODDS,
+    market_probability: float | None = None,
+    market_odds_full: list[float] | None = None,
+    selection_index: int = 0,
 ) -> OddsVerdict:
+    from value_scanner.market_anchor import evaluate_anchored_edge
+
     model_prob = pick.model_probability / 100.0
-    value_pct = value_percentage(model_prob, novibet_odds)
-    threshold = min_value_pct if min_value_pct is not None else required_edge_pct(novibet_odds)
+    raw_value = value_percentage(model_prob, novibet_odds)
 
     if novibet_odds < min_odds:
         return OddsVerdict(
             novibet_odds=novibet_odds,
-            value_pct=round(value_pct, 1),
+            value_pct=round(raw_value, 1),
             should_play=False,
             reason=f"SKIP — απόδοση {novibet_odds} κάτω από {min_odds} (βαρύ φαβορί, αδύναμο edge).",
+            model_probability=pick.model_probability,
         )
 
-    if value_pct >= threshold:
-        return OddsVerdict(
-            novibet_odds=novibet_odds,
-            value_pct=round(value_pct, 1),
-            should_play=True,
-            reason=(
-                f"ΠΑΙΞΕ — value +{value_pct:.1f}% "
-                f"(μοντέλο {pick.model_probability}% × {novibet_odds}, "
-                f"όριο +{threshold:.0f}%)."
-            ),
-        )
+    should_play, value_pct, anchor, reason = evaluate_anchored_edge(
+        model_prob,
+        novibet_odds,
+        market=pick.market,
+        market_probability=market_probability,
+        market_odds_full=market_odds_full,
+        selection_index=selection_index,
+        min_edge_pct=min_value_pct,
+    )
 
     return OddsVerdict(
         novibet_odds=novibet_odds,
-        value_pct=round(value_pct, 1),
-        should_play=False,
-        reason=f"SKIP — value {value_pct:+.1f}% (χρειάζεται ≥ +{threshold:.0f}% σε αυτή την απόδοση).",
+        value_pct=value_pct,
+        should_play=should_play,
+        reason=reason,
+        anchored_probability=round(anchor.anchored_probability * 100, 1),
+        model_probability=pick.model_probability,
+        anchor_note=anchor.note,
     )
 
 
@@ -376,12 +385,19 @@ def handle_user_message(text: str) -> str:
         if pick is None:
             return "Δεν υπάρχει ενεργό pick. Ρώτα «σημερινό pick»."
         verdict = evaluate_novibet_odds(pick, odds)
-        return (
-            f"{pick.home} vs {pick.away}\n"
-            f"{pick.market} / {pick.selection}\n"
-            f"{verdict.reason}\n"
-            f"Value: {verdict.value_pct:+.1f}%"
-        )
+        lines = [
+            f"{pick.home} vs {pick.away}",
+            f"{pick.market} / {pick.selection}",
+            verdict.reason,
+            f"Anchored value: {verdict.value_pct:+.1f}%",
+        ]
+        if verdict.anchored_probability is not None:
+            lines.append(
+                f"Μοντέλο {verdict.model_probability}% → anchored {verdict.anchored_probability}%"
+            )
+        if verdict.anchor_note:
+            lines.append(verdict.anchor_note)
+        return "\n".join(lines)
 
     pick = get_today_pick()
     if pick is None:
