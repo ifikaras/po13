@@ -1,0 +1,26 @@
+{
+  "id": "02",
+  "title": "Colors for Kids",
+  "youtube_title": "Learn Colors for Kids | Colors for Toddlers & Preschool",
+  "description": "Learn colors for kids! A fun and simple video for toddlers and preschoolers to learn red, blue, yellow, green, and orange.",
+  "tags": [
+    "colors for kids",
+    "learn colors",
+    "colors for toddlers",
+    "preschool learning",
+    "kids educational video",
+    "toddler learning",
+    "kindergarten"
+  ],
+  "thumbnail_text": "Learn Colors",
+  "scenes": [
+    {
+      "id": "intro",
+      "image": "intro.png",
+      "narration": "Hello, little friend! Today we will learn colors! Red, blue, yellow, and more. Are you ready? Let's go!",
+      "on_screen": "Learn Colors",
+      "subtitle": "Happy Little Learners"
+    }
+  ],
+  "_note": "Template episode — add PNG images to assets/ and complete scenes in script.json"
+}

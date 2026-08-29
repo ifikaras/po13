@@ -1,0 +1,91 @@
+{
+  "id": "01",
+  "title": "Forest Animals for Kids",
+  "youtube_title": "Forest Animals for Kids | Learn Animal Names for Toddlers & Preschool",
+  "description": "Learn forest animal names for kids! In this fun and simple video, toddlers and preschoolers meet a bear, fox, rabbit, owl, and deer. Perfect for little learners who love animals!\n\nAnimals in this video:\n🐻 Bear\n🦊 Fox\n🐰 Rabbit\n🦉 Owl\n🦌 Deer",
+  "tags": [
+    "forest animals for kids",
+    "learn animal names",
+    "animals for toddlers",
+    "preschool learning",
+    "kids educational video",
+    "animal names for kids",
+    "toddler learning",
+    "kindergarten",
+    "bear fox rabbit",
+    "kids animals"
+  ],
+  "thumbnail_text": "Forest Animals",
+  "scenes": [
+    {
+      "id": "intro",
+      "image": "intro.png",
+      "narration": "Hello, little friend! Welcome to Happy Little Learners! Today we are going on a fun trip to the forest. We will meet cute animals and learn their names. Are you ready? Let's go!",
+      "on_screen": "Happy Little Learners",
+      "subtitle": "Forest Animals for Kids"
+    },
+    {
+      "id": "forest",
+      "image": "intro.png",
+      "narration": "Look! This is the forest. The forest has big trees and pretty flowers. Many animals live here. Birds sing in the trees. Little animals hide and play. The forest is a happy home for animals!",
+      "on_screen": "The Forest",
+      "subtitle": "A happy animal home"
+    },
+    {
+      "id": "bear",
+      "image": "bear.png",
+      "narration": "Here is a bear! The bear is big and strong. Bears live in the forest. Bears love honey. Yum yum! Bears have soft brown fur. In winter, bears sleep a lot. That is called hibernation. Can you say bear? Bear!",
+      "on_screen": "Bear",
+      "subtitle": "Big and friendly"
+    },
+    {
+      "id": "fox",
+      "image": "fox.png",
+      "narration": "Look, a fox! The fox is fast and smart. The fox has a red coat and a fluffy tail. Foxes like to run and play at night. They have very good ears. They can hear tiny sounds! Can you say fox? Fox!",
+      "on_screen": "Fox",
+      "subtitle": "Fast and smart"
+    },
+    {
+      "id": "rabbit",
+      "image": "rabbit.png",
+      "narration": "Hop hop! Here is a rabbit! Rabbits are small and cute. Rabbits love carrots. Rabbits have long ears and they hop very high. Rabbits live in a little hole under the ground. Can you say rabbit? Rabbit!",
+      "on_screen": "Rabbit",
+      "subtitle": "Hop hop!"
+    },
+    {
+      "id": "owl",
+      "image": "owl.png",
+      "narration": "Who who! Here is an owl! The owl has big round eyes. Owls come out at night. They say hoo hoo hoo! Owls can turn their head around. They fly very quietly. Can you say owl? Owl!",
+      "on_screen": "Owl",
+      "subtitle": "Hoo hoo!"
+    },
+    {
+      "id": "deer",
+      "image": "deer.png",
+      "narration": "Look at the deer! The deer is gentle and sweet. Some deer have antlers on their head. Deer run very fast. They eat leaves and berries. Deer like to stay with their family. Can you say deer? Deer!",
+      "on_screen": "Deer",
+      "subtitle": "Gentle and sweet"
+    },
+    {
+      "id": "recap",
+      "image": "recap.png",
+      "narration": "Let's play a little game! Which animal loves honey? The bear! Which animal is red? The fox! Which animal hops? The rabbit! Which animal says hoo hoo? The owl! Which animal has antlers? The deer! Great job!",
+      "on_screen": "Great Job!",
+      "subtitle": "You did it!"
+    },
+    {
+      "id": "counting",
+      "image": "recap.png",
+      "narration": "Now let's count the animals! One, two, three, four, five! Five forest animals! One bear, one fox, one rabbit, one owl, and one deer. Can you count on your fingers? One, two, three, four, five!",
+      "on_screen": "Let's Count!",
+      "subtitle": "1, 2, 3, 4, 5"
+    },
+    {
+      "id": "outro",
+      "image": "outro.png",
+      "narration": "Thank you for watching, little friend! We learned bear, fox, rabbit, owl, and deer. If you had fun, ask a grown-up to subscribe to Happy Little Learners. See you next time! Bye bye!",
+      "on_screen": "Happy Little Learners",
+      "subtitle": "See you soon!"
+    }
+  ]
+}

@@ -252,7 +252,7 @@ def generate_video(episode_dir: Path, output_name: str | None = None) -> Path:
     height = config["video"]["height"]
     fps = config["video"]["fps"]
 
-    print(f"🎬 Δημιουργία: {episode['title']}")
+    print(f"Creating: {episode['title']}")
 
     clips = []
     total_duration = 0.0
@@ -261,7 +261,7 @@ def generate_video(episode_dir: Path, output_name: str | None = None) -> Path:
     for scene in episode["scenes"]:
         if total_duration >= max_duration:
             break
-        print(f"  → Σκηνή: {scene['id']}")
+        print(f"  -> Scene: {scene['id']}")
         clip = build_scene_clip(scene, assets_dir, cache_dir, config, width, height, fps)
         remaining = max_duration - total_duration
         if clip.duration > remaining:
@@ -287,7 +287,7 @@ def generate_video(episode_dir: Path, output_name: str | None = None) -> Path:
     slug = output_name or f"episode_{episode['id']}_{episode_dir.name}"
     output_path = output_dir / f"{slug}.mp4"
 
-    print(f"  → Εξαγωγή βίντεο ({video.duration:.1f}s)...")
+    print(f"  -> Exporting video ({video.duration:.1f}s)...")
     video.write_videofile(
         str(output_path),
         fps=fps,
@@ -300,22 +300,23 @@ def generate_video(episode_dir: Path, output_name: str | None = None) -> Path:
 
     thumb_path = output_dir / f"{slug}_thumbnail.png"
     create_thumbnail(episode, assets_dir, ROOT / "branding", thumb_path, config)
-    print(f"✅ Έτοιμο: {output_path}")
-    print(f"🖼️  Thumbnail: {thumb_path}")
+    print(f"Done: {output_path}")
+    print(f"Thumbnail: {thumb_path}")
 
-    # Save YouTube metadata
+    # Save YouTube metadata (SEO-friendly)
+    yt_title = episode.get("youtube_title") or f"{episode['title']} | {config['channel']['name']}"
     meta = {
-        "title": f"{episode['title']} | {config['channel']['name']}",
-        "description": episode["description"] + f"\n\n🔔 Εγγραφή: {config['channel']['name']}\n#παιδικά #εκπαιδευτικό #ελληνικά",
+        "title": yt_title,
+        "description": episode["description"] + f"\n\nSubscribe for more fun learning videos!\n{config['channel']['name']}\n\n#kids #toddlers #preschool #learnanimals #forestanimals #educational",
         "tags": episode.get("tags", []),
         "duration_seconds": round(video.duration, 1),
     }
     meta_path = output_dir / f"{slug}_youtube.txt"
     meta_path.write_text(
-        f"Τίτλος:\n{meta['title']}\n\n"
-        f"Περιγραφή:\n{meta['description']}\n\n"
+        f"Title:\n{meta['title']}\n\n"
+        f"Description:\n{meta['description']}\n\n"
         f"Tags: {', '.join(meta['tags'])}\n\n"
-        f"Διάρκεια: {meta['duration_seconds']} δευτερόλεπτα\n",
+        f"Duration: {meta['duration_seconds']} seconds\n",
         encoding="utf-8",
     )
 
@@ -327,7 +328,7 @@ def main():
     parser.add_argument(
         "episode",
         nargs="?",
-        default="01_ta_zoa_tou_dasous",
+        default="01_forest_animals",
         help="Episode folder name under episodes/",
     )
     parser.add_argument("--output-name", help="Custom output filename slug")

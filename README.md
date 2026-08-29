@@ -4,10 +4,10 @@
 
 See [`kids-youtube/README.md`](kids-youtube/README.md) for the full guide.
 
-Quick start:
+**Channel:** Happy Little Learners (English, global)
 
 ```bash
 cd kids-youtube && pip install -r requirements.txt && python3 src/generate_video.py
 ```
 
-Output: `kids-youtube/output/episode_01_01_ta_zoa_tou_dasous.mp4`
+Output: `kids-youtube/output/episode_01_01_forest_animals.mp4`

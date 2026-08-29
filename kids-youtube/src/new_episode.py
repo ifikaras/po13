@@ -3,18 +3,20 @@
 
 import argparse
 import json
-import shutil
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-TEMPLATE = ROOT / "episodes" / "01_ta_zoa_tou_dasous"
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("slug", help="Episode folder slug, e.g. 03_ta_noumera")
-    parser.add_argument("--title", required=True)
+    parser.add_argument("slug", help="Episode folder slug, e.g. 03_numbers")
+    parser.add_argument("--title", required=True, help="Short title, e.g. 'Numbers for Kids'")
     parser.add_argument("--id", required=True, help="Episode number like 03")
+    parser.add_argument(
+        "--youtube-title",
+        help="Full SEO YouTube title (defaults to '<title> | Learn for Toddlers & Preschool')",
+    )
     args = parser.parse_args()
 
     dest = ROOT / "episodes" / args.slug
@@ -24,19 +26,30 @@ def main():
     dest.mkdir(parents=True)
     (dest / "assets").mkdir()
 
+    yt_title = args.youtube_title or f"{args.title} | Learn for Toddlers & Preschool"
+    slug_topic = args.title.lower().replace(" for kids", "")
+
     script = {
         "id": args.id,
         "title": args.title,
-        "description": f"Νέο επεισόδιο: {args.title}",
-        "tags": ["παιδικά", "εκπαιδευτικό", "ελληνικά"],
+        "youtube_title": yt_title,
+        "description": f"Learn {slug_topic} for kids! A fun and simple video for toddlers and preschoolers.",
+        "tags": [
+            f"{slug_topic} for kids",
+            "learn for toddlers",
+            "preschool learning",
+            "kids educational video",
+            "toddler learning",
+            "kindergarten",
+        ],
         "thumbnail_text": args.title,
         "scenes": [
             {
                 "id": "intro",
                 "image": "intro.png",
-                "narration": f"Γεια σου! Σήμερα θα μάθουμε για: {args.title}!",
+                "narration": f"Hello, little friend! Today we will learn about {slug_topic}! Are you ready? Let's go!",
                 "on_screen": args.title,
-                "subtitle": "Μικροί Εξερευνητές",
+                "subtitle": "Happy Little Learners",
             }
         ],
     }

@@ -1,9 +1,9 @@
 channel:
-  name: "Μικροί Εξερευνητές"
-  tagline: "Μαθαίνουμε με χαρά!"
-  language: el-GR
-  voice: el-GR-AthinaNeural
-  voice_intro: el-GR-NestorasNeural
+  name: "Happy Little Learners"
+  tagline: "Fun learning for little kids!"
+  language: en-US
+  voice: en-US-JennyNeural
+  voice_intro: en-US-JennyNeural
 
 branding:
   primary_color: "#FF6B9D"
