@@ -6,7 +6,7 @@
 
 ### Your daily workflow
 
-1. **Agent scans** all Novibet-likely matches and sends numbered list
+1. **Agent scans** all Novibet-likely matches across **multiple sports** and sends numbered list
 2. You open Novibet and reply with odds: **`#5 BTTS Όχι 2.03`** or screenshot
 3. Agent replies: **ΠΑΙΞΕ** or **SKIP** (+ stake suggestion)
 4. Message **`καβά`** anytime for bankroll / open bets
@@ -15,8 +15,8 @@ You do **not** need to suggest matches — the agent initiates the scan.
 
 ### What the agent does automatically
 
-- Scans upcoming football fixtures (major leagues on Novibet)
-- Poisson model + FotMob stats
+- Scans upcoming fixtures: **football** (top leagues), **NBA/WNBA/MLB/NHL/NFL**, **tennis** (ATP/WTA/Challenger)
+- Poisson model (football) + win-rate model (team sports) + Pinnacle ML (tennis/off-season)
 - Picks one bet with best model edge (no hard odds cap — edge tiers decide PLAY/SKIP)
 - Evaluates value when you report Novibet odds
 
@@ -44,8 +44,9 @@ Without the key, soft-sanity market-anchor still runs (no sharp blend).
 
 ### Limitations
 
+- **Football:** full statistical model + Pinnacle 1X2/O-U/DC
+- **NBA, NFL, MLB, NHL, tennis:** moneyline via ESPN/Pinnacle; Pinnacle sharp anchor on evaluation
 - **Novibet odds:** agent cannot read Novibet directly (bot block). You check the app once (~30 sec).
-- **Football:** full statistical model. Other sports: ask agent for a pick when basketball/NBA is in season.
 
 ### Value formula
 

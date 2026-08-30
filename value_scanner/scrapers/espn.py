@@ -1,4 +1,4 @@
-"""ESPN scoreboard data for basketball and other US sports."""
+"""ESPN scoreboard data for basketball, NFL, NHL, MLB."""
 
 from __future__ import annotations
 
@@ -6,12 +6,10 @@ from dataclasses import dataclass
 from datetime import date
 
 from value_scanner.http_client import get_json
+from value_scanner.sports_config import ESPN_LEAGUES, EspnLeagueConfig
 
-ESPN_SPORTS = [
-    ("basketball", "nba", "NBA"),
-    ("basketball", "wnba", "WNBA"),
-    ("basketball", "fiba", "FIBA"),
-]
+# Backward-compatible export for daily_pick.
+ESPN_SPORTS = [(c.sport_path, c.league_path, c.league_name) for c in ESPN_LEAGUES]
 
 
 @dataclass
@@ -24,6 +22,8 @@ class EspnEvent:
     home_id: str
     away_id: str
     status: str
+    sport_path: str = ""
+    league_path: str = ""
 
 
 def _format_espn_date(value: date) -> str:
@@ -35,10 +35,10 @@ def fetch_espn_events(scan_date: date | None = None) -> list[EspnEvent]:
     date_param = _format_espn_date(scan_date)
     events: list[EspnEvent] = []
 
-    for sport_path, league_path, league_name in ESPN_SPORTS:
+    for cfg in ESPN_LEAGUES:
         url = (
-            f"https://site.api.espn.com/apis/site/v2/sports/{sport_path}/"
-            f"{league_path}/scoreboard?dates={date_param}"
+            f"https://site.api.espn.com/apis/site/v2/sports/{cfg.sport_path}/"
+            f"{cfg.league_path}/scoreboard?dates={date_param}"
         )
         try:
             payload = get_json(url)
@@ -73,18 +73,27 @@ def fetch_espn_events(scan_date: date | None = None) -> list[EspnEvent]:
 
             events.append(
                 EspnEvent(
-                    sport="basketball",
-                    league=league_name,
+                    sport=cfg.sport_key,
+                    league=cfg.league_name,
                     home=home,
                     away=away,
                     kickoff_utc=event.get("date", ""),
                     home_id=home_id,
                     away_id=away_id,
                     status=status_type.get("description", "scheduled"),
+                    sport_path=cfg.sport_path,
+                    league_path=cfg.league_path,
                 )
             )
 
     return events
+
+
+def league_config_for(event: EspnEvent) -> EspnLeagueConfig | None:
+    for cfg in ESPN_LEAGUES:
+        if cfg.league_name == event.league and cfg.sport_key == event.sport:
+            return cfg
+    return None
 
 
 def fetch_team_win_rate(sport_path: str, league_path: str, team_id: str) -> float | None:

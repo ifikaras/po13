@@ -61,10 +61,9 @@ class DailyPick:
     novibet_path: str
 
     def summary_greek(self) -> str:
-        sport_label = {
-            "football": "Ποδόσφαιρο",
-            "basketball": "Μπάσκετ",
-        }.get(self.sport, self.sport)
+        from value_scanner.sports_config import SPORT_LABELS_GREEK
+
+        sport_label = SPORT_LABELS_GREEK.get(self.sport, self.sport)
         return (
             f"{sport_label} — {self.league}\n"
             f"Αγώνας: {self.home} vs {self.away}\n"
@@ -108,6 +107,8 @@ NOVIBET_PATHS = {
     ("Double Chance", "X2"): "Διπλή ευκαιρία → X2",
     ("Moneyline", "Home Win"): "Νικητής → Εντός",
     ("Moneyline", "Away Win"): "Νικητής → Εκτός",
+    ("Moneyline", "Player 1"): "Νικητής → Παίκτης 1",
+    ("Moneyline", "Player 2"): "Νικητής → Παίκτης 2",
 }
 
 ESPN_LEAGUE_PATH = {name: (sport, league) for sport, league, name in ESPN_SPORTS}
@@ -430,7 +431,7 @@ def handle_user_message(text: str) -> str:
         if candidate is None:
             return f"Δεν βρέθηκε #{idx}. Γράψε «σκαν» για νέα λίστα."
         pick = DailyPick(
-            sport="football",
+            sport=candidate.sport,
             league=candidate.league,
             home=candidate.home,
             away=candidate.away,
