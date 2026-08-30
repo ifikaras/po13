@@ -2,21 +2,7 @@
   "currency": "EUR",
   "starting_bankroll": 100.0,
   "current_bankroll": 102.08,
-  "open_bets": [
-    {
-      "id": "bet-2026-08-30-5",
-      "placed_date": "2026-08-30",
-      "match": "Monaco vs Marseille",
-      "league": "Ligue 1",
-      "market": "Double Chance",
-      "selection": "X2",
-      "odds": 1.6,
-      "stake": 1.5,
-      "kickoff_utc": "2026-08-30T18:45:00.000Z",
-      "status": "open",
-      "profit": 0.0
-    }
-  ],
+  "open_bets": [],
   "settled_bets": [
     {
       "id": "bet-2026-08-28-1",
@@ -69,6 +55,19 @@
       "kickoff_utc": "2026-08-30T13:00:00.000Z",
       "status": "won",
       "profit": 1.56
+    },
+    {
+      "id": "bet-2026-08-30-5",
+      "placed_date": "2026-08-30",
+      "match": "Monaco vs Marseille",
+      "league": "Ligue 1",
+      "market": "Double Chance",
+      "selection": "X2",
+      "odds": 1.6,
+      "stake": 1.5,
+      "kickoff_utc": "2026-08-30T18:45:00.000Z",
+      "status": "lost",
+      "profit": -1.5
     }
   ]
 }
