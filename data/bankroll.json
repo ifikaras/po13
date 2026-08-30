@@ -1,21 +1,8 @@
 {
   "currency": "EUR",
   "starting_bankroll": 100.0,
-  "current_bankroll": 99.02,
+  "current_bankroll": 102.08,
   "open_bets": [
-    {
-      "id": "bet-2026-08-28-2",
-      "placed_date": "2026-08-28",
-      "match": "Sunderland vs Fulham",
-      "league": "Premier League",
-      "market": "BTTS",
-      "selection": "No",
-      "odds": 2.04,
-      "stake": 1.5,
-      "kickoff_utc": "2026-08-30T13:00:00.000Z",
-      "status": "open",
-      "profit": 0.0
-    },
     {
       "id": "bet-2026-08-30-5",
       "placed_date": "2026-08-30",
@@ -69,6 +56,19 @@
       "kickoff_utc": "2026-08-29T19:30:00.000Z",
       "status": "won",
       "profit": 1.32
+    },
+    {
+      "id": "bet-2026-08-28-2",
+      "placed_date": "2026-08-28",
+      "match": "Sunderland vs Fulham",
+      "league": "Premier League",
+      "market": "BTTS",
+      "selection": "No",
+      "odds": 2.04,
+      "stake": 1.5,
+      "kickoff_utc": "2026-08-30T13:00:00.000Z",
+      "status": "won",
+      "profit": 1.56
     }
   ]
 }
