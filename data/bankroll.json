@@ -1,8 +1,22 @@
 {
   "currency": "EUR",
   "starting_bankroll": 100.0,
-  "current_bankroll": 102.08,
-  "open_bets": [],
+  "current_bankroll": 100.58,
+  "open_bets": [
+    {
+      "id": "bet-2026-08-31-6",
+      "placed_date": "2026-08-31",
+      "match": "Barcelona vs Rayo Vallecano",
+      "league": "LaLiga",
+      "market": "BTTS",
+      "selection": "No",
+      "odds": 1.77,
+      "stake": 1.5,
+      "kickoff_utc": "2026-08-31T19:30:00.000Z",
+      "status": "open",
+      "profit": 0.0
+    }
+  ],
   "settled_bets": [
     {
       "id": "bet-2026-08-28-1",
