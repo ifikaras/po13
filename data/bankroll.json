@@ -1,7 +1,7 @@
 {
   "currency": "EUR",
   "starting_bankroll": 100.0,
-  "current_bankroll": 100.58,
+  "current_bankroll": 99.08,
   "open_bets": [
     {
       "id": "bet-2026-08-31-6",
@@ -13,6 +13,19 @@
       "odds": 1.77,
       "stake": 1.5,
       "kickoff_utc": "2026-08-31T19:30:00.000Z",
+      "status": "open",
+      "profit": 0.0
+    },
+    {
+      "id": "bet-2026-08-31-7",
+      "placed_date": "2026-08-31",
+      "match": "Levadiakos vs Panathinaikos",
+      "league": "Super League",
+      "market": "BTTS",
+      "selection": "Yes",
+      "odds": 1.85,
+      "stake": 1.5,
+      "kickoff_utc": "2026-08-31T16:30:00.000Z",
       "status": "open",
       "profit": 0.0
     }
