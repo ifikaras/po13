@@ -1,8 +1,35 @@
 {
   "currency": "EUR",
   "starting_bankroll": 100.0,
-  "current_bankroll": 99.08,
-  "open_bets": [],
+  "current_bankroll": 96.08,
+  "open_bets": [
+    {
+      "id": "bet-2026-09-01-8",
+      "placed_date": "2026-09-01",
+      "match": "Portsmouth vs Derby County",
+      "league": "Championship",
+      "market": "BTTS",
+      "selection": "Yes",
+      "odds": 1.77,
+      "stake": 1.5,
+      "kickoff_utc": "2026-09-01T18:45:00.000Z",
+      "status": "open",
+      "profit": 0.0
+    },
+    {
+      "id": "bet-2026-09-01-9",
+      "placed_date": "2026-09-01",
+      "match": "Preston North End vs Bristol City",
+      "league": "Championship",
+      "market": "BTTS",
+      "selection": "No",
+      "odds": 2.15,
+      "stake": 1.5,
+      "kickoff_utc": "2026-09-01T18:45:00.000Z",
+      "status": "open",
+      "profit": 0.0
+    }
+  ],
   "settled_bets": [
     {
       "id": "bet-2026-08-28-1",
