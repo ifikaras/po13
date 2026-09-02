@@ -12,6 +12,8 @@ from pathlib import Path
 from typing import Any
 
 from polymarket_paper.simulator import (
+    CONSERVATIVE_FILL_DRAG_PER_DAY,
+    CONSERVATIVE_SHARE,
     VirtualOrder,
     build_orders,
     estimate_daily_reward,
@@ -20,11 +22,11 @@ from polymarket_paper.simulator import (
     pick_market,
     q_min_two_sided,
     score_order,
+    size_for_daily_target,
 )
 
+
 SAMPLES_PER_DAY = 10_080
-CONSERVATIVE_SHARE = 0.10
-CONSERVATIVE_FILL_DRAG_PER_DAY = 3.0
 
 
 @dataclass
@@ -157,8 +159,18 @@ def requote(state: DaemonState, mid: float) -> None:
     state.last_mid = mid
 
 
-def init_daemon(bankroll: float, order_size_usd: float) -> DaemonState:
-    market = pick_market(max_min_size=order_size_usd)
+def init_daemon(
+    bankroll: float,
+    order_size_usd: float,
+    target_daily_net: float | None = None,
+    min_daily_rate: float = 40.0,
+) -> DaemonState:
+    market = pick_market(
+        min_daily_rate=min_daily_rate,
+        max_min_size=order_size_usd,
+        order_size_usd=order_size_usd,
+        target_daily_net=target_daily_net,
+    )
     orders, q_you = build_orders(market, order_size_usd)
     now = datetime.now(timezone.utc).isoformat()
     return DaemonState(
@@ -174,26 +186,66 @@ def init_daemon(bankroll: float, order_size_usd: float) -> DaemonState:
 
 
 def run_daemon(
-    bankroll: float = 100.0,
-    order_size_usd: float = 20.0,
+    bankroll: float | None = None,
+    order_size_usd: float | None = None,
     sample_interval_sec: float = 60.0,
     state_path: Path = Path("data/polymarket_paper_state.json"),
     log_path: Path = Path("data/polymarket_paper_daily.log"),
     seed: int = 42,
     stop_at_utc_midnight: bool = True,
+    reset: bool = False,
+    target_daily_net: float | None = 3.5,
+    min_daily_rate: float = 40.0,
 ) -> DaemonState:
+    if reset and state_path.exists():
+        state_path.unlink()
+        append_log(log_path, "RESET — cleared previous state for retarget")
+
+    # Auto-size capital to hit conservative daily target when not specified.
+    if bankroll is None or order_size_usd is None:
+        if target_daily_net is None:
+            raise ValueError("Provide --bankroll/--order-size or --target-daily")
+        append_log(
+            log_path,
+            f"Sizing for conservative target ${target_daily_net:.2f}/day "
+            f"(scan pools ≥ ${min_daily_rate:.0f}/d)...",
+        )
+        sizing = size_for_daily_target(
+            target_daily_net=target_daily_net,
+            min_daily_rate=min_daily_rate,
+        )
+        bankroll = bankroll if bankroll is not None else float(sizing["bankroll"])
+        order_size_usd = (
+            order_size_usd if order_size_usd is not None else float(sizing["order_size_usd"])
+        )
+        append_log(
+            log_path,
+            (
+                f"SIZED bankroll=${bankroll:.0f} order=${order_size_usd:.0f}/side "
+                f"expected_cons=${sizing['expected_conservative_daily']:+.2f}/d "
+                f"pool=${sizing['market']['daily_pool']:.0f}/d "
+                f"market={sizing['market']['question'][:55]}"
+            ),
+        )
+
     if bankroll < order_size_usd * 2:
         raise ValueError("Need at least 2x order size for two-sided quotes.")
 
     day_started = utc_day_key()
     state = load_state(state_path)
     if state is None or not state.market:
-        append_log(log_path, "Scanning reward markets (top pools by daily rate)...")
-        state = init_daemon(bankroll, order_size_usd)
+        append_log(log_path, "Scanning reward markets (larger pools, target net)...")
+        state = init_daemon(
+            bankroll,
+            order_size_usd,
+            target_daily_net=target_daily_net,
+            min_daily_rate=min_daily_rate,
+        )
         append_log(
             log_path,
             f"START market={state.market['question'][:60]} pool=${state.market['daily_pool']:.0f}/d "
-            f"bankroll=${bankroll:.0f} order=${order_size_usd:.0f}/side",
+            f"bankroll=${bankroll:.0f} order=${order_size_usd:.0f}/side "
+            f"expected_cons=${float(state.market.get('expected_conservative_daily', 0)):+.2f}/d",
         )
     else:
         append_log(log_path, f"RESUME samples={state.samples} conservative_net=${state.conservative_net_today:.2f}")
@@ -288,14 +340,24 @@ def run_daemon(
 
 def print_daemon_summary(state: DaemonState) -> None:
     hours = state.samples / 60.0
+    expected = float(state.market.get("expected_conservative_daily") or 0.0)
     print("\n=== POLYMARKET PAPER DAEMON — DAY SUMMARY ===")
     print(f"Market: {state.market.get('question', '')[:80]}")
+    print(
+        f"Pool: ${float(state.market.get('daily_pool', 0)):.0f}/day | "
+        f"order ${state.order_size_usd:.0f}/side | locked ${state.locked_capital:.0f}"
+    )
+    if expected:
+        print(f"Target (expected conservative): ~${expected:+.2f}/day")
     print(f"Runtime: ~{hours:.1f}h ({state.samples} samples @ 1/min)")
     print(f"Virtual bankroll start: ${state.starting_bankroll:.2f}")
     print(f"Gross rewards (model): +${state.gross_rewards:.4f}")
     print(f"Fill P/L: {state.fill_pnl:+.4f} ({state.fills} fills, {state.requotes} requotes)")
     print(f"Gross daily pace: ~${state.gross_daily_pace:.2f}/day")
-    print(f"\n--- CONSERVATIVE (10% share, $3/day fill drag) ---")
+    print(
+        f"\n--- CONSERVATIVE ({100 * CONSERVATIVE_SHARE:.0f}% of model, "
+        f"${CONSERVATIVE_FILL_DRAG_PER_DAY:.0f}/day fill drag) ---"
+    )
     print(f"Net today (so far): ${state.conservative_net_today:+.2f}")
     print(f"Bankroll (conservative): ${state.ending_bankroll:.2f}")
     print(f"ROI today: {100 * state.conservative_net_today / state.starting_bankroll:+.2f}%")

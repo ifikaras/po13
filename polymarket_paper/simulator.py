@@ -97,20 +97,39 @@ def estimate_competition_from_book(
     return max(total, fallback)
 
 
+CONSERVATIVE_SHARE = 0.10
+CONSERVATIVE_FILL_DRAG_PER_DAY = 3.0
+
+
+def conservative_daily_net(gross_daily: float, fill_drag: float = CONSERVATIVE_FILL_DRAG_PER_DAY) -> float:
+    """Haircut model rewards and subtract fixed fill drag."""
+    return gross_daily * CONSERVATIVE_SHARE - fill_drag
+
+
 def pick_market(
-    min_daily_rate: float = 5.0,
+    min_daily_rate: float = 40.0,
     max_min_size: float = 25.0,
-    scan_limit: int = 40,
+    scan_limit: int = 60,
+    order_size_usd: float | None = None,
+    target_daily_net: float | None = None,
 ) -> dict[str, Any]:
+    """
+    Pick a reward market.
+
+    Prefers larger daily pools. When order_size_usd is set, ranks by expected
+    conservative daily net (10% of model share − $3 fill drag) so capital can
+    aim for a target like $3–4/day.
+    """
     payload = _get_json(f"{CLOB_BASE}/rewards/markets/current?limit=500")
     rows = payload.get("data", [])
     rows.sort(key=lambda r: float(r.get("total_daily_rate") or 0), reverse=True)
     candidates: list[dict[str, Any]] = []
+    size = order_size_usd if order_size_usd is not None else max_min_size
 
     for row in rows[:scan_limit]:
         daily = float(row.get("total_daily_rate") or 0)
         min_size = float(row.get("rewards_min_size") or 999)
-        if daily < min_daily_rate or min_size > max_min_size:
+        if daily < min_daily_rate or min_size > size:
             continue
         cond = row["condition_id"]
         try:
@@ -136,27 +155,90 @@ def pick_market(
             fallback=max(api_comp, 15.0),
         )
         comp = max(api_comp, book_comp, 15.0)
-        candidates.append(
-            {
-                "condition_id": cond,
-                "question": detail.get("question", ""),
-                "token_yes": yes["token_id"],
-                "token_no": tokens[1]["token_id"],
-                "mid": price,
-                "daily_pool": daily,
-                "max_spread_cents": float(row.get("rewards_max_spread") or 0),
-                "min_size": min_size,
-                "competitiveness": comp,
-                "score_ratio": daily / comp,
-            }
-        )
+        market = {
+            "condition_id": cond,
+            "question": detail.get("question", ""),
+            "token_yes": yes["token_id"],
+            "token_no": tokens[1]["token_id"],
+            "mid": price,
+            "daily_pool": daily,
+            "max_spread_cents": float(row.get("rewards_max_spread") or 0),
+            "min_size": min_size,
+            "competitiveness": comp,
+            "score_ratio": daily / comp,
+        }
+        _, q_you = build_orders(market, size, live_mid=False)
+        gross = estimate_daily_reward(q_you, comp, daily)
+        market["expected_gross_daily"] = gross
+        market["expected_conservative_daily"] = conservative_daily_net(gross)
+        market["q_you"] = q_you
+        candidates.append(market)
         time.sleep(0.05)
 
     if not candidates:
-        raise RuntimeError("No suitable reward market found for minimum capital.")
+        raise RuntimeError(
+            "No suitable reward market found. Try a larger --order-size "
+            "(unlocks higher min_size pools) or lower --min-daily-pool."
+        )
 
-    candidates.sort(key=lambda x: x["score_ratio"], reverse=True)
-    return candidates[0]
+    # Prefer markets that meet the daily target; otherwise highest conservative net.
+    if target_daily_net is not None:
+        meeting = [c for c in candidates if c["expected_conservative_daily"] >= target_daily_net]
+        pool = meeting if meeting else candidates
+    else:
+        pool = candidates
+
+    pool.sort(
+        key=lambda x: (x["expected_conservative_daily"], x["daily_pool"], x["score_ratio"]),
+        reverse=True,
+    )
+    return pool[0]
+
+
+def size_for_daily_target(
+    target_daily_net: float = 3.5,
+    bankroll_buffer: float = 1.5,
+    order_sizes: tuple[float, ...] = (50.0, 75.0, 100.0, 150.0, 200.0),
+    min_daily_rate: float = 40.0,
+    scan_limit: int = 40,
+) -> dict[str, Any]:
+    """
+    Find the cheapest (order size, market) combo whose conservative expected
+    net is >= target_daily_net. Returns sizing + chosen market.
+    """
+    best: dict[str, Any] | None = None
+    for order_size in order_sizes:
+        try:
+            market = pick_market(
+                min_daily_rate=min_daily_rate,
+                max_min_size=order_size,
+                scan_limit=scan_limit,
+                order_size_usd=order_size,
+                target_daily_net=target_daily_net,
+            )
+        except RuntimeError:
+            continue
+        cons = float(market["expected_conservative_daily"])
+        if cons < target_daily_net:
+            continue
+        locked = order_size * 2
+        bankroll = locked * bankroll_buffer
+        candidate = {
+            "order_size_usd": order_size,
+            "bankroll": bankroll,
+            "locked_capital": locked,
+            "expected_conservative_daily": cons,
+            "expected_gross_daily": market["expected_gross_daily"],
+            "market": market,
+        }
+        if best is None or candidate["bankroll"] < best["bankroll"]:
+            best = candidate
+    if best is None:
+        raise RuntimeError(
+            f"No market/size combo reaches conservative ${target_daily_net:.2f}/day. "
+            "Pools may be too competitive right now — retry later or raise order sizes."
+        )
+    return best
 
 
 def fetch_mid(token_id: str, fallback: float) -> tuple[float, float, float]:
@@ -179,10 +261,14 @@ def build_orders(
     market: dict[str, Any],
     order_size_usd: float,
     target_ratio: float = 0.5,
+    live_mid: bool = True,
 ) -> tuple[list[VirtualOrder], float]:
     """Place virtual two-sided quotes at target_ratio * max_spread from mid."""
     max_spread = market["max_spread_cents"] / 100.0
-    mid, _, _ = fetch_mid(market["token_yes"], market["mid"])
+    if live_mid:
+        mid, _, _ = fetch_mid(market["token_yes"], market["mid"])
+    else:
+        mid = float(market["mid"])
     offset = max_spread * target_ratio
 
     buy_price = round(max(0.01, mid - offset), 3)

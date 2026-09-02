@@ -2,9 +2,17 @@
 
 ## Paper daemon (virtual, no wallet)
 
+Target: **~$3–4/day conservative** (10% of model rewards − $3/day fill drag).
+
 ```bash
-# Run all day (1 sample/min, stops at UTC midnight)
-python3 -m polymarket_paper.cli daemon --bankroll 100 --order-size 20
+# Auto-size capital + pick a larger reward pool for ~$3.5/day
+python3 -m polymarket_paper.cli size --target-daily 3.5
+
+# Run all day (1 sample/min, stops at UTC midnight) — auto bankroll/order
+python3 -m polymarket_paper.cli daemon --reset --target-daily 3.5
+
+# Or pin capital after sizing (example from a live scan)
+python3 -m polymarket_paper.cli daemon --reset --bankroll 225 --order-size 75 --target-daily 3.5
 
 # Check progress anytime
 python3 -m polymarket_paper.cli status
@@ -13,7 +21,8 @@ python3 -m polymarket_paper.cli status
 tail -f data/polymarket_paper_daily.log
 ```
 
-Conservative estimate uses: **10% of reward pool share**, minus simulated fills, minus **$3/day** fill drag.
+Conservative estimate uses: **10% of model reward share**, minus simulated fills, minus **$3/day** fill drag.
+The picker ignores tiny pools (<~$40/day) and ranks markets by expected conservative net.
 
 ---
 
@@ -26,9 +35,10 @@ Conservative estimate uses: **10% of reward pool share**, minus simulated fills,
 
 ### 2. Fund the wallet
 - **USDC on Polygon** (not Ethereum mainnet)
-- Minimum practical: **$100–150**
-  - $40 locked in two $20 orders (one market)
+- For ~$3–4/day conservative target: typically **~$225** virtual/live bankroll
+  - ~$150 locked in two $75 orders on a larger reward pool (~$90+/day)
   - Rest as buffer for fills / repositioning
+- Minimum tiny-pool experiments: **$100–150** (often < $1–2/day after haircuts)
 - Optional: small amount of **MATIC/POL** for gas (usually minimal on Polymarket)
 
 ### 3. Deposit to Polymarket
