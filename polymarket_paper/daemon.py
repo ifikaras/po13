@@ -299,6 +299,8 @@ def print_daemon_summary(state: DaemonState) -> None:
     print(f"Net today (so far): ${state.conservative_net_today:+.2f}")
     print(f"Bankroll (conservative): ${state.ending_bankroll:.2f}")
     print(f"ROI today: {100 * state.conservative_net_today / state.starting_bankroll:+.2f}%")
-    if hours > 0:
+    if hours > 0.5:
         proj = state.conservative_net_today * (24.0 / hours)
         print(f"Projected full-day conservative net: ~${proj:+.2f}")
+    else:
+        print("Projected full-day: wait until ~30+ minutes of samples for reliable projection")

@@ -7,6 +7,7 @@ import argparse
 from pathlib import Path
 
 from polymarket_paper.daemon import print_daemon_summary, run_daemon
+from polymarket_paper.multi_runner import print_all_status, run_multi
 from polymarket_paper.simulator import print_summary, run_session, save_report
 
 
@@ -48,6 +49,25 @@ def cmd_daemon(args: argparse.Namespace) -> None:
     print_daemon_summary(state)
 
 
+def cmd_multi(args: argparse.Namespace) -> None:
+    print(
+        f"Starting multi-strategy paper sim: ${args.bankroll:.0f} total "
+        f"(${args.bankroll/3:.1f}/strategy), interval={args.interval}s"
+    )
+    print("Strategies: weather_edge | wallet_mirror | musk_neg_risk")
+    run_multi(
+        bankroll=args.bankroll,
+        interval_sec=args.interval,
+        data_dir=args.data_dir,
+        log_path=args.log,
+        once=args.once,
+    )
+
+
+def cmd_multi_status(args: argparse.Namespace) -> None:
+    print_all_status(args.data_dir)
+
+
 def cmd_status(args: argparse.Namespace) -> None:
     from polymarket_paper.daemon import load_state
 
@@ -84,6 +104,18 @@ def main() -> None:
     p_status = sub.add_parser("status", help="Show current daemon state")
     p_status.add_argument("--state", type=Path, default=Path("data/polymarket_paper_state.json"))
     p_status.set_defaults(func=cmd_status)
+
+    p_multi = sub.add_parser("multi", help="Run weather + wallet mirror + musk paper sims")
+    p_multi.add_argument("--bankroll", type=float, default=100.0, help="Total virtual capital split /3")
+    p_multi.add_argument("--interval", type=float, default=300.0, help="Seconds between cycles (default 5min)")
+    p_multi.add_argument("--once", action="store_true", help="Run one cycle and exit")
+    p_multi.add_argument("--data-dir", type=Path, default=Path("data/strategies"))
+    p_multi.add_argument("--log", type=Path, default=Path("data/strategies_daily.log"))
+    p_multi.set_defaults(func=cmd_multi)
+
+    p_ms = sub.add_parser("multi-status", help="Status for all 3 strategy sims")
+    p_ms.add_argument("--data-dir", type=Path, default=Path("data/strategies"))
+    p_ms.set_defaults(func=cmd_multi_status)
 
     args = parser.parse_args()
     args.func(args)
