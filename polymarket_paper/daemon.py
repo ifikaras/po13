@@ -188,6 +188,7 @@ def run_daemon(
     day_started = utc_day_key()
     state = load_state(state_path)
     if state is None or not state.market:
+        append_log(log_path, "Scanning reward markets (top pools by daily rate)...")
         state = init_daemon(bankroll, order_size_usd)
         append_log(
             log_path,

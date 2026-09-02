@@ -97,11 +97,17 @@ def estimate_competition_from_book(
     return max(total, fallback)
 
 
-def pick_market(min_daily_rate: float = 5.0, max_min_size: float = 25.0) -> dict[str, Any]:
+def pick_market(
+    min_daily_rate: float = 5.0,
+    max_min_size: float = 25.0,
+    scan_limit: int = 40,
+) -> dict[str, Any]:
     payload = _get_json(f"{CLOB_BASE}/rewards/markets/current?limit=500")
+    rows = payload.get("data", [])
+    rows.sort(key=lambda r: float(r.get("total_daily_rate") or 0), reverse=True)
     candidates: list[dict[str, Any]] = []
 
-    for row in payload.get("data", []):
+    for row in rows[:scan_limit]:
         daily = float(row.get("total_daily_rate") or 0)
         min_size = float(row.get("rewards_min_size") or 999)
         if daily < min_daily_rate or min_size > max_min_size:
@@ -110,7 +116,7 @@ def pick_market(min_daily_rate: float = 5.0, max_min_size: float = 25.0) -> dict
         try:
             detail = _get_json(f"{CLOB_BASE}/rewards/markets/{cond}")["data"][0]
         except (urllib.error.HTTPError, KeyError, IndexError):
-            time.sleep(0.15)
+            time.sleep(0.08)
             continue
 
         tokens = detail.get("tokens") or []
@@ -144,7 +150,7 @@ def pick_market(min_daily_rate: float = 5.0, max_min_size: float = 25.0) -> dict
                 "score_ratio": daily / comp,
             }
         )
-        time.sleep(0.12)
+        time.sleep(0.05)
 
     if not candidates:
         raise RuntimeError("No suitable reward market found for minimum capital.")
