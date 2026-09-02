@@ -5,11 +5,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 # pinnapi sport ids (mirrored in scrapers/pinnacle.py)
+# Football (NFL/NCAA)=5, Baseball (MLB)=6 — see https://pinnapi.com/docs
 SPORT_SOCCER = 1
 SPORT_TENNIS = 2
 SPORT_BASKETBALL = 3
 SPORT_HOCKEY = 4
-SPORT_BASEBALL = 5
+SPORT_AMERICAN_FOOTBALL = 5
+SPORT_BASEBALL = 6
 
 
 @dataclass(frozen=True)
@@ -25,7 +27,7 @@ class EspnLeagueConfig:
 ESPN_LEAGUES: tuple[EspnLeagueConfig, ...] = (
     EspnLeagueConfig("basketball", "nba", "NBA", "basketball", SPORT_BASKETBALL, 0.06),
     EspnLeagueConfig("basketball", "wnba", "WNBA", "basketball", SPORT_BASKETBALL, 0.05),
-    EspnLeagueConfig("football", "nfl", "NFL", "american_football", SPORT_BASEBALL, 0.04),
+    EspnLeagueConfig("football", "nfl", "NFL", "american_football", SPORT_AMERICAN_FOOTBALL, 0.04),
     EspnLeagueConfig("hockey", "nhl", "NHL", "hockey", SPORT_HOCKEY, 0.05),
     EspnLeagueConfig("baseball", "mlb", "MLB", "baseball", SPORT_BASEBALL, 0.04),
 )
@@ -48,9 +50,9 @@ SPORT_EMOJI: dict[str, str] = {
     "american_football": "🏈",
 }
 
-# pinnapi sport_id=5 mixes MLB + NFL — filter by league name.
+# Optional league-name filters (sport ids are already separate: NFL=5, MLB=6).
 PINNACLE_LEAGUE_FILTERS: dict[str, tuple[str, ...]] = {
-    "baseball": ("mlb", "npb", "kbo", "baseball"),
+    "baseball": ("mlb", "npb", "kbo", "baseball", "major league"),
     "american_football": ("nfl",),
 }
 

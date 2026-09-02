@@ -307,7 +307,12 @@ def build_scan_board(scan_date: date | None = None, days: int = 1) -> list[ScanC
     merged.extend(_build_espn_candidates(now))
     merged.extend(_build_tennis_candidates(now))
 
-    from value_scanner.sports_config import SPORT_BASEBALL, SPORT_BASKETBALL, SPORT_HOCKEY
+    from value_scanner.sports_config import (
+        SPORT_AMERICAN_FOOTBALL,
+        SPORT_BASEBALL,
+        SPORT_BASKETBALL,
+        SPORT_HOCKEY,
+    )
 
     espn_sports = {c.sport for c in [x[1] for x in merged if x[1].sport != "football"]}
     if "basketball" not in espn_sports:
@@ -317,7 +322,9 @@ def build_scan_board(scan_date: date | None = None, days: int = 1) -> list[ScanC
     if "baseball" not in espn_sports:
         merged.extend(_build_pinnacle_team_candidates(now, "baseball", SPORT_BASEBALL))
     if "american_football" not in espn_sports:
-        merged.extend(_build_pinnacle_team_candidates(now, "american_football", SPORT_BASEBALL))
+        merged.extend(
+            _build_pinnacle_team_candidates(now, "american_football", SPORT_AMERICAN_FOOTBALL)
+        )
 
     merged.sort(key=lambda item: (0 if item[1].status == "ΕΠΟΜΕΝΟ" else 1, item[1].kickoff_utc))
     candidates = [c for _, c in merged]

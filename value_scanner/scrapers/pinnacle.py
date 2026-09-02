@@ -19,12 +19,14 @@ from value_scanner.sports_config import PINNACLE_LEAGUE_FILTERS
 
 PINNAPI_BASE = "https://pinnapi.com"
 
-# pinnapi dropping-odds sport ids
+# pinnapi dropping-odds sport ids (NOT the same as Pinnacle internal IDs)
+# Docs: https://pinnapi.com/docs — Football (NFL)=5, Baseball (MLB)=6
 SPORT_SOCCER = 1
 SPORT_TENNIS = 2
 SPORT_BASKETBALL = 3
 SPORT_HOCKEY = 4
-SPORT_BASEBALL = 5  # also includes NFL on pinnapi
+SPORT_AMERICAN_FOOTBALL = 5
+SPORT_BASEBALL = 6
 
 SPORT_ID_BY_KEY: dict[str, int] = {
     "football": SPORT_SOCCER,
@@ -32,8 +34,8 @@ SPORT_ID_BY_KEY: dict[str, int] = {
     "tennis": SPORT_TENNIS,
     "basketball": SPORT_BASKETBALL,
     "hockey": SPORT_HOCKEY,
+    "american_football": SPORT_AMERICAN_FOOTBALL,
     "baseball": SPORT_BASEBALL,
-    "american_football": SPORT_BASEBALL,
 }
 
 _CACHE: dict[str, tuple[float, Any]] = {}
@@ -307,12 +309,11 @@ def status_report() -> str:
         ("tennis", SPORT_TENNIS, "tennis"),
         ("basketball", SPORT_BASKETBALL, "basketball"),
         ("hockey", SPORT_HOCKEY, "hockey"),
-        ("baseball/NFL", SPORT_BASEBALL, "baseball"),
+        ("NFL", SPORT_AMERICAN_FOOTBALL, "american_football"),
+        ("baseball", SPORT_BASEBALL, "baseball"),
     ]:
         if key == "football":
             n = len(fetch_pinnapi_soccer_prematch())
-        elif key == "baseball":
-            n = len(fetch_pinnapi_prematch(SPORT_BASEBALL, "baseball"))
         else:
             n = len(fetch_pinnapi_prematch(sid, key))
         parts.append(f"{label} {n}")
