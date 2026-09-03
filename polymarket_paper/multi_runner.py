@@ -66,16 +66,38 @@ def _save(path: Path, st: Any, dict_fn: Any) -> None:
     path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
+def _selected(only: list[str] | None) -> dict[str, Any]:
+    if not only:
+        names = list(STRATEGIES)
+    else:
+        names = []
+        for name in only:
+            key = name.strip().lower()
+            if key in ("musk_neg_risk", "musk-neg-risk"):
+                key = "musk"
+            if key in ("weather_edge", "weather-edge"):
+                key = "weather"
+            if key in ("wallet_mirror", "wallet-mirror"):
+                key = "mirror"
+            if key not in STRATEGIES:
+                raise ValueError(f"Unknown strategy {name!r}. Choose from: {', '.join(STRATEGIES)}")
+            names.append(key)
+    return {name: STRATEGIES[name] for name in names}
+
+
 def run_multi(
     bankroll: float = 100.0,
     interval_sec: float = 300.0,
     data_dir: Path = Path("data/strategies"),
     log_path: Path = Path("data/strategies_daily.log"),
     once: bool = False,
+    only: list[str] | None = None,
 ) -> None:
+    selected = _selected(only)
+    n = max(len(selected), 1)
     states = {}
-    for name, (cls, _, dict_fn) in STRATEGIES.items():
-        per = bankroll / 3.0
+    for name, (cls, _, dict_fn) in selected.items():
+        per = bankroll / n
         path = data_dir / f"{name}_state.json"
         states[name] = (path, cls, _load(path, cls, per), dict_fn)
 
@@ -89,13 +111,16 @@ def run_multi(
     signal.signal(signal.SIGINT, _stop)
 
     with log_path.open("a", encoding="utf-8") as logf:
-        logf.write(f"\n[{datetime.now(timezone.utc).isoformat()}] MULTI START bankroll={bankroll}\n")
+        logf.write(
+            f"\n[{datetime.now(timezone.utc).isoformat()}] MULTI START "
+            f"bankroll={bankroll} only={','.join(states)}\n"
+        )
 
         while running:
             summary_parts = []
             for name, (path, cls, st, dict_fn) in states.items():
                 try:
-                    _, cycle_fn, _ = STRATEGIES[name]
+                    _, cycle_fn, _ = selected[name]
                     st = cycle_fn(st)
                     _save(path, st, dict_fn)
                     states[name] = (path, cls, st, dict_fn)
@@ -116,11 +141,16 @@ def run_multi(
             time.sleep(interval_sec)
 
 
-def print_all_status(data_dir: Path = Path("data/strategies")) -> None:
-    print("\n=== MULTI STRATEGY PAPER STATUS ===")
+def print_all_status(
+    data_dir: Path = Path("data/strategies"),
+    only: list[str] | None = None,
+) -> None:
+    selected = _selected(only)
+    title = "MUSK PAPER STATUS" if list(selected) == ["musk"] else "MULTI STRATEGY PAPER STATUS"
+    print(f"\n=== {title} ===")
     total_start = 0.0
     total_equity = 0.0
-    for name in STRATEGIES:
+    for name in selected:
         path = data_dir / f"{name}_state.json"
         if not path.exists():
             print(f"\n{name}: not started")

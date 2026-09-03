@@ -89,30 +89,37 @@ def cmd_size(args: argparse.Namespace) -> None:
 
 
 def cmd_multi(args: argparse.Namespace) -> None:
+    only = args.only or ["musk"]
     print(
-        f"Starting multi-strategy paper sim: ${args.bankroll:.0f} total "
-        f"(${args.bankroll/3:.1f}/strategy), interval={args.interval}s"
+        f"Starting paper sim: strategies={','.join(only)} "
+        f"bankroll=${args.bankroll:.0f}, interval={args.interval}s"
     )
-    print("Strategies: weather_edge | wallet_mirror | musk_neg_risk")
     run_multi(
         bankroll=args.bankroll,
         interval_sec=args.interval,
         data_dir=args.data_dir,
         log_path=args.log,
         once=args.once,
+        only=only,
     )
 
 
 def cmd_multi_status(args: argparse.Namespace) -> None:
-    print_all_status(args.data_dir)
+    only = args.only or ["musk"]
+    print_all_status(args.data_dir, only=only)
 
 
 def cmd_status(args: argparse.Namespace) -> None:
+    """Default status is the live Musk paper bot (LP / other strats are stopped)."""
+    print_all_status(Path("data/strategies"), only=["musk"])
+
+
+def cmd_lp_status(args: argparse.Namespace) -> None:
     from polymarket_paper.daemon import load_state
 
     state = load_state(args.state)
     if state is None:
-        print("No daemon state found. Start with: python3 -m polymarket_paper.cli daemon --reset")
+        print("No LP daemon state found (LP is stopped).")
         return
     print_daemon_summary(state)
 
@@ -168,20 +175,30 @@ def main() -> None:
     p_size.add_argument("--min-daily-pool", type=float, default=40.0)
     p_size.set_defaults(func=cmd_size)
 
-    p_status = sub.add_parser("status", help="Show current daemon state")
-    p_status.add_argument("--state", type=Path, default=Path("data/polymarket_paper_state.json"))
+    p_status = sub.add_parser("status", help="Show Musk paper bot status (the only live strategy)")
     p_status.set_defaults(func=cmd_status)
 
-    p_multi = sub.add_parser("multi", help="Run weather + wallet mirror + musk paper sims")
-    p_multi.add_argument("--bankroll", type=float, default=100.0, help="Total virtual capital split /3")
+    p_lp = sub.add_parser("lp-status", help="Show stopped LP daemon last state")
+    p_lp.add_argument("--state", type=Path, default=Path("data/polymarket_paper_state.json"))
+    p_lp.set_defaults(func=cmd_lp_status)
+
+    p_multi = sub.add_parser("multi", help="Run paper strategies (default: musk only)")
+    p_multi.add_argument("--bankroll", type=float, default=33.33, help="Virtual capital (used only if no saved state)")
     p_multi.add_argument("--interval", type=float, default=300.0, help="Seconds between cycles (default 5min)")
     p_multi.add_argument("--once", action="store_true", help="Run one cycle and exit")
+    p_multi.add_argument(
+        "--only",
+        nargs="+",
+        default=["musk"],
+        help="Which strategies to run (default: musk). Options: musk weather mirror",
+    )
     p_multi.add_argument("--data-dir", type=Path, default=Path("data/strategies"))
     p_multi.add_argument("--log", type=Path, default=Path("data/strategies_daily.log"))
     p_multi.set_defaults(func=cmd_multi)
 
-    p_ms = sub.add_parser("multi-status", help="Status for all 3 strategy sims")
+    p_ms = sub.add_parser("musk-status", help="Status for the Musk paper bot")
     p_ms.add_argument("--data-dir", type=Path, default=Path("data/strategies"))
+    p_ms.add_argument("--only", nargs="+", default=["musk"])
     p_ms.set_defaults(func=cmd_multi_status)
 
     args = parser.parse_args()
