@@ -17,10 +17,11 @@ Educational backtest of the Candle Range Theory rules discussed for an MQL5 EA.
 ```bash
 pip install pandas numpy yfinance
 cd crt_backtest
-python3 run_backtest.py
+python3 run_backtest.py          # H4 + M15/H1
+python3 run_daily_backtest.py    # Daily-only, 4–5y
 ```
 
-Results land in `results/` (`REPORT.md`, per-case JSON + trade CSVs).
+Results land in `results/` (`REPORT.md`, `DAILY_REPORT.md`, per-case JSON + trade CSVs).
 
 ## Caveats
 
