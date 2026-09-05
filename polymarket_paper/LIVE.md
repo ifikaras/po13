@@ -1,36 +1,35 @@
 # Polymarket Paper → Live Checklist
 
-## Currently running: Musk tweet neg-risk only
+## Currently running (all paper bots)
 
-LP rewards, weather edge, and wallet mirror paper bots are **stopped**.
-Only the Musk Goldilocks + Runner-up NO sim keeps running.
+1. **LP rewards** — larger pool, ~$225 / $75 side, target ~$3–4/day conservative  
+2. **Weather edge** — Open-Meteo vs Polymarket temp buckets  
+3. **Wallet mirror** — copy top monthly PNL wallets  
+4. **Musk neg-risk** — Goldilocks + Runner-up NO  
 
 ```bash
-# Musk-only paper loop (resumes saved positions)
-python3 -m polymarket_paper.cli multi --only musk --interval 300
+# Strategy loop (weather + mirror + musk)
+python3 -m polymarket_paper.cli multi --interval 300
 
-# Status
+# LP rewards daemon
+python3 -m polymarket_paper.cli daemon --reset --bankroll 225 --order-size 75 --target-daily 3.5 --no-midnight-stop
+
+# Status (all bots)
 python3 -m polymarket_paper.cli status
 
 # Logs
-tail -f data/strategies_daily.log
+tail -f data/strategies_daily.log data/polymarket_paper_daily.log
 ```
 
 ---
 
-## LP paper daemon (stopped — not live)
+## LP paper daemon
 
-Target was **~$3–4/day conservative** (10% of model rewards − $3/day fill drag).
-Do not start this unless you explicitly want LP again.
+Target **~$3–4/day conservative** (10% of model rewards − $3/day fill drag).
 
 ```bash
-# Auto-size capital + pick a larger reward pool for ~$3.5/day
 python3 -m polymarket_paper.cli size --target-daily 3.5
-
-# Run all day (1 sample/min, stops at UTC midnight) — auto bankroll/order
-python3 -m polymarket_paper.cli daemon --reset --target-daily 3.5
-
-# Last LP snapshot (daemon is not running)
+python3 -m polymarket_paper.cli daemon --reset --bankroll 225 --order-size 75 --target-daily 3.5
 python3 -m polymarket_paper.cli lp-status
 ```
 
