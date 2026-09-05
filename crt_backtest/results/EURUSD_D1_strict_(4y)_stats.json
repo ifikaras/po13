@@ -1,0 +1,20 @@
+{
+  "label": "EURUSD D1 strict (4y)",
+  "symbol": "EURUSD=X",
+  "interval": "1d",
+  "period": "4y",
+  "start": "2022-09-05 00:00:00+00:00",
+  "end": "2026-09-04 00:00:00+00:00",
+  "trades": 12,
+  "wins": 10,
+  "losses": 2,
+  "win_rate": 83.33333333333334,
+  "avg_r": 0.9375312891732532,
+  "total_r": 11.250375470079039,
+  "max_dd_r": -1.0,
+  "profit_factor": 12.250375470079039,
+  "longs": 4,
+  "shorts": 8,
+  "best_r": 2.3254024970765323,
+  "worst_r": -1.0
+}

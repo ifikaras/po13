@@ -1,0 +1,20 @@
+{
+  "label": "EURUSD D1 strict (5y)",
+  "symbol": "EURUSD=X",
+  "interval": "1d",
+  "period": "5y",
+  "start": "2021-09-06 00:00:00+00:00",
+  "end": "2026-09-04 00:00:00+00:00",
+  "trades": 17,
+  "wins": 15,
+  "losses": 2,
+  "win_rate": 88.23529411764706,
+  "avg_r": 1.1100516062555497,
+  "total_r": 18.870877306344344,
+  "max_dd_r": -1.0,
+  "profit_factor": 19.870877306344344,
+  "longs": 8,
+  "shorts": 9,
+  "best_r": 2.8665604945776586,
+  "worst_r": -1.0
+}
