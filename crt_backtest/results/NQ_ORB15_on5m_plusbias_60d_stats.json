@@ -1,0 +1,32 @@
+{
+  "label": "NQ ORB15 on5m +bias 60d",
+  "start": "2026-06-26 00:05:00-04:00",
+  "end": "2026-09-04 16:55:00-04:00",
+  "params": {
+    "or_minutes": 15,
+    "use_daily_bias": true,
+    "sma_n": 200,
+    "min_or_atr": 0.1,
+    "max_or_atr": 0.8,
+    "tp1_r": 1.0,
+    "tp2_r": 2.0,
+    "partial_at_tp1": true,
+    "flatten_at_close": true,
+    "cost_bps_rt": 1.5
+  },
+  "yearly_r": {
+    "2026": -12.957122386730157
+  },
+  "trades": 38,
+  "wins": 14,
+  "losses": 24,
+  "win_rate": 36.84210526315789,
+  "avg_r": -0.3409769049139515,
+  "total_r": -12.957122386730157,
+  "max_dd_r": -14.299669986036815,
+  "profit_factor": 0.4213141726407742,
+  "longs": 38,
+  "shorts": 0,
+  "best_r": 1.481930828220859,
+  "worst_r": -1.0480762162162163
+}
