@@ -17,11 +17,22 @@ Educational backtest of the Candle Range Theory rules discussed for an MQL5 EA.
 ```bash
 pip install pandas numpy yfinance
 cd crt_backtest
-python3 run_backtest.py          # H4 + M15/H1
-python3 run_daily_backtest.py    # Daily-only, 4–5y
+python3 run_backtest.py              # CRT H4 + M15/H1
+python3 run_daily_backtest.py        # CRT Daily-only, 4–5y
+python3 run_breakout_backtest.py     # Donchian/ATR D1 breakout (max history)
 ```
 
-Results land in `results/` (`REPORT.md`, `DAILY_REPORT.md`, per-case JSON + trade CSVs).
+Results land in `results/` (`REPORT.md`, `DAILY_REPORT.md`, `BREAKOUT_REPORT.md`, per-case JSON + trade CSVs).
+
+## Recommended EA candidate (not CRT)
+
+Daily Donchian breakout + ATR stops (see `breakout_strategy.py`):
+
+1. Signal on D1 close, fill next open
+2. Entry: close breaks prior 20-day Donchian high/low
+3. Filter: SMA200 (longs above / shorts below)
+4. Stop: 2×ATR(20); trail 3×ATR chandelier; also exit on 10-day Donchian
+5. Prefer **US100 long-only** or **Gold L/S** — EURUSD failed this ruleset
 
 ## Caveats
 
