@@ -1,0 +1,19 @@
+{
+  "strategy": "weather_edge",
+  "starting_bankroll": 33.333333333333336,
+  "cash": 33.33,
+  "unrealized": 0.0,
+  "equity": 33.33,
+  "net_pnl": 0.0,
+  "open_positions": 0,
+  "signals": 0,
+  "cycles": 1,
+  "positions": [],
+  "recent_log": [
+    "cycle=1 open=0 unrealized=+0.00"
+  ],
+  "bankroll": 33.333333333333336,
+  "log": [
+    "cycle=1 open=0 unrealized=+0.00"
+  ]
+}
