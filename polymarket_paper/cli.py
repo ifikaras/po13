@@ -110,15 +110,8 @@ def cmd_multi_status(args: argparse.Namespace) -> None:
 
 
 def cmd_status(args: argparse.Namespace) -> None:
-    """Show all paper strategy bots + LP snapshot."""
-    print_all_status(Path("data/strategies"), only=None)
-    print()
-    from polymarket_paper.daemon import load_state, print_daemon_summary
-    st = load_state(Path("data/polymarket_paper_state.json"))
-    if st is None:
-        print("LP: not running / no state yet")
-    else:
-        print_daemon_summary(st)
+    """Default status is the live Musk paper bot."""
+    print_all_status(Path("data/strategies"), only=["musk"])
 
 
 def cmd_lp_status(args: argparse.Namespace) -> None:
@@ -182,22 +175,22 @@ def main() -> None:
     p_size.add_argument("--min-daily-pool", type=float, default=40.0)
     p_size.set_defaults(func=cmd_size)
 
-    p_status = sub.add_parser("status", help="Show all paper bots (strategies + LP)")
+    p_status = sub.add_parser("status", help="Show Musk paper bot status (only live strategy)")
     p_status.set_defaults(func=cmd_status)
 
     p_lp = sub.add_parser("lp-status", help="Show LP daemon state")
     p_lp.add_argument("--state", type=Path, default=Path("data/polymarket_paper_state.json"))
     p_lp.set_defaults(func=cmd_lp_status)
 
-    p_multi = sub.add_parser("multi", help="Run paper strategies (default: weather + mirror + musk)")
-    p_multi.add_argument("--bankroll", type=float, default=100.0, help="Total virtual capital split across strategies")
+    p_multi = sub.add_parser("multi", help="Run paper strategies (default: musk only)")
+    p_multi.add_argument("--bankroll", type=float, default=33.33, help="Virtual capital (used only if no saved state)")
     p_multi.add_argument("--interval", type=float, default=300.0, help="Seconds between cycles (default 5min)")
     p_multi.add_argument("--once", action="store_true", help="Run one cycle and exit")
     p_multi.add_argument(
         "--only",
         nargs="+",
-        default=None,
-        help="Subset of strategies (default: all). Options: weather mirror musk",
+        default=["musk"],
+        help="Which strategies to run (default: musk). Options: musk weather mirror",
     )
     p_multi.add_argument("--data-dir", type=Path, default=Path("data/strategies"))
     p_multi.add_argument("--log", type=Path, default=Path("data/strategies_daily.log"))
