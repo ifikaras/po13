@@ -44,11 +44,18 @@ def _load(path: Path, cls: type, bankroll: float) -> Any:
     elif cls is MuskState:
         from polymarket_paper.strategies.musk_neg_risk import MuskPosition
 
-        st.positions = [MuskPosition(**p) for p in raw.get("positions", [])]
+        st.positions = [MuskPosition(**{k: v for k, v in p.items() if k in MuskPosition.__dataclass_fields__}) for p in raw.get("positions", [])]
         st.cycles = raw.get("cycles", 0)
         st.signals = raw.get("signals", 0)
         st.event_slug = raw.get("event_slug", "")
-        st.log = raw.get("log", [])
+        st.realized_pnl = float(raw.get("realized_pnl", 0.0))
+        st.log = raw.get("log", []) or raw.get("recent_log", [])
+        # Prefer cash field if bankroll was overwritten by equity dumps
+        if "cash" in raw and raw.get("bankroll") == raw.get("equity"):
+            st.bankroll = float(raw["cash"])
+        elif "cash" in raw and float(raw.get("bankroll", 0)) > float(raw["cash"]) + 1:
+            # bankroll in file sometimes wrongly set to equity; cash is true free cash
+            st.bankroll = float(raw["cash"])
     return st
 
 
@@ -159,9 +166,15 @@ def print_all_status(
         total_start += raw.get("starting_bankroll", 0)
         total_equity += raw.get("equity", raw.get("starting_bankroll", 0))
         print(f"\n--- {raw.get('strategy', name)} ---")
-        for k in ("equity", "net_pnl", "cash", "unrealized", "open_positions", "cycles"):
+        for k in ("equity", "net_pnl", "cash", "unrealized", "realized_pnl", "open_positions", "cycles"):
             if k in raw:
                 print(f"  {k}: {raw[k]}")
+        if raw.get("event_slug"):
+            print(f"  event: {raw['event_slug']}")
+        for pos in (raw.get("positions") or [])[:6]:
+            sig = pos.get("signal", "?")
+            q = (pos.get("question") or "")[:55]
+            print(f"  pos {sig}: NO@{float(pos.get('entry_no', 0)):.3f} ${pos.get('size_usd')} | {q}")
         for line in raw.get("recent_log", [])[-5:]:
             print(f"  > {line}")
     print(f"\nTOTAL: ${total_start:.2f} -> ${total_equity:.2f} (net ${total_equity - total_start:+.2f})")
