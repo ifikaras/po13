@@ -1,0 +1,217 @@
+{
+  "starting_bankroll": 100.0,
+  "ending_bankroll": 101.1495,
+  "rewards_earned": 0.1193,
+  "fill_pnl": 1.0302,
+  "net_pnl": 1.1495,
+  "fills": 1,
+  "samples": 18,
+  "market_question": "Will the highest temperature in Istanbul be 27°C on September 2?",
+  "condition_id": "0x025c33e77dd49c5236b7e8b83b7f7a67a56477dd853afafcddd8a3de4a051d9a",
+  "daily_pool": 96.0,
+  "competitiveness": 15.0,
+  "started_at": "2026-09-02T12:06:53.028067+00:00",
+  "last_mid": 0.15,
+  "log": [
+    {
+      "event": "start",
+      "market": "Will the highest temperature in Istanbul be 27°C on September 2?",
+      "daily_pool": 96.0,
+      "competitiveness": 15.0,
+      "q_you": 34.373,
+      "estimated_daily_reward": 66.8342,
+      "orders": [
+        {
+          "side": "BUY",
+          "token_id": "9310528814061397652920961379414117761488876222552057498476725785664790896722",
+          "price": 0.108,
+          "size_usd": 20.0,
+          "shares": 185.1851851851852,
+          "spread_from_mid": 0.022000000000000006,
+          "score_per_sample": 48.376771833561925,
+          "active": true
+        },
+        {
+          "side": "SELL",
+          "token_id": "9310528814061397652920961379414117761488876222552057498476725785664790896722",
+          "price": 0.152,
+          "size_usd": 20.0,
+          "shares": 131.57894736842107,
+          "spread_from_mid": 0.021999999999999992,
+          "score_per_sample": 34.37296946068879,
+          "active": true
+        }
+      ],
+      "locked_capital": 40.0,
+      "free_capital": 60.0
+    },
+    {
+      "event": "sample",
+      "i": 1,
+      "mid": 0.13,
+      "best_bid": 0.1,
+      "best_ask": 0.16,
+      "reward_accum": 0.00663,
+      "fills": []
+    },
+    {
+      "event": "sample",
+      "i": 2,
+      "mid": 0.13,
+      "best_bid": 0.1,
+      "best_ask": 0.16,
+      "reward_accum": 0.013261,
+      "fills": []
+    },
+    {
+      "event": "sample",
+      "i": 3,
+      "mid": 0.13,
+      "best_bid": 0.1,
+      "best_ask": 0.16,
+      "reward_accum": 0.019891,
+      "fills": []
+    },
+    {
+      "event": "sample",
+      "i": 4,
+      "mid": 0.13,
+      "best_bid": 0.1,
+      "best_ask": 0.16,
+      "reward_accum": 0.026522,
+      "fills": []
+    },
+    {
+      "event": "sample",
+      "i": 5,
+      "mid": 0.13,
+      "best_bid": 0.1,
+      "best_ask": 0.16,
+      "reward_accum": 0.033152,
+      "fills": []
+    },
+    {
+      "event": "sample",
+      "i": 6,
+      "mid": 0.13,
+      "best_bid": 0.1,
+      "best_ask": 0.16,
+      "reward_accum": 0.039782,
+      "fills": []
+    },
+    {
+      "event": "sample",
+      "i": 7,
+      "mid": 0.135,
+      "best_bid": 0.1,
+      "best_ask": 0.17,
+      "reward_accum": 0.046413,
+      "fills": []
+    },
+    {
+      "event": "sample",
+      "i": 8,
+      "mid": 0.125,
+      "best_bid": 0.1,
+      "best_ask": 0.15,
+      "reward_accum": 0.053043,
+      "fills": []
+    },
+    {
+      "event": "sample",
+      "i": 9,
+      "mid": 0.13,
+      "best_bid": 0.1,
+      "best_ask": 0.16,
+      "reward_accum": 0.059673,
+      "fills": []
+    },
+    {
+      "event": "sample",
+      "i": 10,
+      "mid": 0.135,
+      "best_bid": 0.1,
+      "best_ask": 0.17,
+      "reward_accum": 0.066304,
+      "fills": []
+    },
+    {
+      "event": "sample",
+      "i": 11,
+      "mid": 0.125,
+      "best_bid": 0.1,
+      "best_ask": 0.15,
+      "reward_accum": 0.072934,
+      "fills": []
+    },
+    {
+      "event": "sample",
+      "i": 12,
+      "mid": 0.115,
+      "best_bid": 0.1,
+      "best_ask": 0.13,
+      "reward_accum": 0.079565,
+      "fills": []
+    },
+    {
+      "event": "sample",
+      "i": 13,
+      "mid": 0.14,
+      "best_bid": 0.11,
+      "best_ask": 0.17,
+      "reward_accum": 0.086195,
+      "fills": []
+    },
+    {
+      "event": "sample",
+      "i": 14,
+      "mid": 0.14,
+      "best_bid": 0.1,
+      "best_ask": 0.18,
+      "reward_accum": 0.092825,
+      "fills": []
+    },
+    {
+      "event": "sample",
+      "i": 15,
+      "mid": 0.13,
+      "best_bid": 0.11,
+      "best_ask": 0.15,
+      "reward_accum": 0.099456,
+      "fills": [
+        {
+          "side": "BUY",
+          "price": 0.108,
+          "pnl": 1.0302
+        }
+      ]
+    },
+    {
+      "event": "sample",
+      "i": 16,
+      "mid": 0.12,
+      "best_bid": 0.1,
+      "best_ask": 0.14,
+      "reward_accum": 0.106086,
+      "fills": []
+    },
+    {
+      "event": "sample",
+      "i": 17,
+      "mid": 0.15,
+      "best_bid": 0.11,
+      "best_ask": 0.19,
+      "reward_accum": 0.112716,
+      "fills": []
+    },
+    {
+      "event": "sample",
+      "i": 18,
+      "mid": 0.15,
+      "best_bid": 0.11,
+      "best_ask": 0.19,
+      "reward_accum": 0.119347,
+      "fills": []
+    }
+  ]
+}

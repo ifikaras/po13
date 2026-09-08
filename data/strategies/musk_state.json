@@ -1,0 +1,45 @@
+{
+  "strategy": "musk_neg_risk",
+  "starting_bankroll": 33.333333333333336,
+  "cash": 9.33,
+  "unrealized": 0.0,
+  "equity": 33.33,
+  "net_pnl": 0.0,
+  "open_positions": 2,
+  "signals": 2,
+  "cycles": 1,
+  "event_slug": "elon-musk-of-tweets-august-28-september-4-2026",
+  "positions": [
+    {
+      "market_id": "3866135",
+      "question": "Will Elon Musk post 200-219 tweets from August 28 to September 4, 2026?",
+      "signal": "goldilocks",
+      "entry_no": 0.615,
+      "size_usd": 12.0,
+      "shares": 19.51219512195122,
+      "yes_at_entry": 0.385,
+      "opened_at": "2026-09-02T13:21:52.638800+00:00"
+    },
+    {
+      "market_id": "3866131",
+      "question": "Will Elon Musk post 180-199 tweets from August 28 to September 4, 2026?",
+      "signal": "runner_up",
+      "entry_no": 0.715,
+      "size_usd": 12.0,
+      "shares": 16.783216783216783,
+      "yes_at_entry": 0.285,
+      "opened_at": "2026-09-02T13:21:52.638822+00:00"
+    }
+  ],
+  "recent_log": [
+    "GOLDILOCKS NO @ 0.615 (YES was 0.385)",
+    "RUNNER_UP NO @ 0.715 (YES was 0.285)",
+    "cycle=1 life=80% open=2 unreal=+0.00"
+  ],
+  "bankroll": 9.333333333333336,
+  "log": [
+    "GOLDILOCKS NO @ 0.615 (YES was 0.385)",
+    "RUNNER_UP NO @ 0.715 (YES was 0.285)",
+    "cycle=1 life=80% open=2 unreal=+0.00"
+  ]
+}
