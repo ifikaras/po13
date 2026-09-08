@@ -184,7 +184,7 @@ def main() -> None:
 
     p_multi = sub.add_parser("multi", help="Run paper strategies (default: musk only)")
     p_multi.add_argument("--bankroll", type=float, default=33.33, help="Virtual capital (used only if no saved state)")
-    p_multi.add_argument("--interval", type=float, default=300.0, help="Seconds between cycles (default 5min)")
+    p_multi.add_argument("--interval", type=float, default=15.0, help="Seconds between cycles (default 15s fast)")
     p_multi.add_argument("--once", action="store_true", help="Run one cycle and exit")
     p_multi.add_argument(
         "--only",
