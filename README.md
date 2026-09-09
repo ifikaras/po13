@@ -1,5 +1,33 @@
 # po13
 
+## First AI Agent (model → tool → result → model)
+
+Following the “build one small agent end-to-end” path: **one job** (Novibet value bets), a base LLM, explicit tools, and a manual heartbeat loop — no LangChain/CrewAI.
+
+```bash
+# Offline demo planner (no API key) — proves the heartbeat
+python -m value_scanner.agent.cli --provider demo --once "σκαν"
+python -m value_scanner.agent.cli --provider demo --once "καβά"
+
+# Interactive CLI
+python -m value_scanner.agent.cli --provider demo
+
+# Real LLM (pick one)
+export OPENAI_API_KEY=...          # or ANTHROPIC_API_KEY=...
+python -m value_scanner.agent.cli  # auto-detects provider
+```
+
+| Phase | What we built |
+|-------|----------------|
+| Small problem | Daily Novibet value-bet assistant only |
+| Base LLM | OpenAI / Anthropic / offline `demo` |
+| Tools | `scan_matches`, `evaluate_odds`, `get_bankroll`, `place_bet`, `settle_bet`, … |
+| Heartbeat | `value_scanner/agent/loop.py` — model → tool → result → model |
+| Memory | Last N messages + `data/agent_memory.json` |
+| Interface | CLI first (`python -m value_scanner.agent.cli`) |
+
+Tests: `python -m value_scanner.tests.test_agent`
+
 ## Daily Value Bet (Novibet) — zero setup for you
 
 **You do nothing technical.** No code, no config files.
