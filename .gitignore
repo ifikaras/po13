@@ -3,3 +3,4 @@ __pycache__/
 .env
 .venv/
 data/current_pick.json
+data/agent_memory.json
