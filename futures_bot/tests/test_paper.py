@@ -64,6 +64,7 @@ class PaperCycleTests(unittest.TestCase):
             client=FakeScanner([DEMO]),
             ledger=PaperLedger(self.ledger_path, config.risk.account_size),
             notifier=notifier,
+            price_feed={},
         )
         self.assertEqual(len(result.approved), 1)
         self.assertEqual(result.approved[0]["symbol"], "DEMOUP")
@@ -77,13 +78,14 @@ class PaperCycleTests(unittest.TestCase):
     def test_second_cycle_does_not_duplicate_symbol(self):
         config = self._config()
         ledger = PaperLedger(self.ledger_path, config.risk.account_size)
-        run_cycle(config, client=FakeScanner([DEMO]), ledger=ledger, notifier=SilentNotifier())
+        run_cycle(config, client=FakeScanner([DEMO]), ledger=ledger, notifier=SilentNotifier(), price_feed={})
         ledger = PaperLedger(self.ledger_path, config.risk.account_size)
         result = run_cycle(
             config,
             client=FakeScanner([DEMO]),
             ledger=ledger,
             notifier=SilentNotifier(),
+            price_feed={},
         )
         self.assertEqual(result.approved, [])
         self.assertEqual(len(result.skipped), 1)
@@ -104,13 +106,21 @@ class PaperCycleTests(unittest.TestCase):
     def test_reset_clears_open_positions(self):
         config = self._config()
         ledger = PaperLedger(self.ledger_path, config.risk.account_size)
-        run_cycle(config, client=FakeScanner([DEMO]), ledger=ledger, notifier=SilentNotifier())
+        run_cycle(
+            config,
+            client=FakeScanner([DEMO]),
+            ledger=ledger,
+            notifier=SilentNotifier(),
+            price_feed={},
+        )
         self.assertEqual(len(ledger.open_positions()), 1)
         ledger.reset()
         self.assertFalse(self.ledger_path.exists())
         empty = PaperLedger(self.ledger_path, config.risk.account_size)
         self.assertEqual(empty.open_positions(), [])
-        self.assertIn("paper open: 0", empty.status_text())
+        text = empty.status_text()
+        self.assertIn("starting capital", text)
+        self.assertIn("open: 0", text)
 
 
 if __name__ == "__main__":

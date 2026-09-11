@@ -7,6 +7,7 @@ import time
 
 from futures_bot.config import load_config
 from futures_bot.paper import PaperLedger
+from futures_bot.prices import fetch_mark_prices
 from futures_bot.runner import run_cycle
 
 
@@ -52,7 +53,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--status",
         action="store_true",
-        help="print open paper positions and exit (no scan)",
+        help="mark open paper positions to live prices, print PnL, and exit",
     )
     args = parser.parse_args(argv)
 
@@ -72,6 +73,15 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.status:
         ledger = PaperLedger(config.ledger_path, config.risk.account_size)
+        symbols = [str(p.get("symbol") or "") for p in ledger.active_positions()]
+        if symbols:
+            try:
+                events = ledger.mark_to_market(fetch_mark_prices(symbols))
+                ledger.save()
+                for event in events:
+                    print(f"[paper] {event}")
+            except Exception as exc:  # noqa: BLE001
+                print(f"[paper] price fetch failed: {exc}")
         print(ledger.status_text())
         return 0
 

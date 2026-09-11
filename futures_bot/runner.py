@@ -9,6 +9,7 @@ from futures_bot.approver import decide
 from futures_bot.config import BotConfig
 from futures_bot.notify import Notifier
 from futures_bot.paper import PaperLedger
+from futures_bot.prices import fetch_mark_prices
 from futures_bot.scanner_client import ScannerClient
 
 
@@ -18,6 +19,7 @@ class CycleResult:
     setups: int = 0
     approved: list[dict[str, Any]] = field(default_factory=list)
     skipped: list[dict[str, Any]] = field(default_factory=list)
+    marks: list[str] = field(default_factory=list)
     job: dict[str, Any] = field(default_factory=dict)
 
 
@@ -28,6 +30,7 @@ def run_cycle(
     ledger: PaperLedger | None = None,
     notifier: Notifier | None = None,
     self_test: bool | None = None,
+    price_feed: Any = None,
 ) -> CycleResult:
     client = client or ScannerClient(config.scanner_url)
     ledger = ledger or PaperLedger(config.ledger_path, config.risk.account_size)
@@ -67,6 +70,21 @@ def run_cycle(
         open_count += 1
         daily_new += 1
         notifier.send(f"[paper] WOULD OPEN {decision.summary}")
+
+    symbols = [str(p.get("symbol") or "") for p in ledger.active_positions()]
+    try:
+        if price_feed is None:
+            prices = fetch_mark_prices(symbols)
+        elif callable(price_feed):
+            prices = price_feed(symbols)
+        else:
+            prices = dict(price_feed)
+        out.marks = ledger.mark_to_market(prices)
+    except Exception as exc:  # noqa: BLE001 - paper loop must survive a dead ticker
+        notifier.send(f"[paper] price fetch failed: {exc}")
+        out.marks = []
+    for event in out.marks:
+        notifier.send(f"[paper] {event}")
 
     ledger.save()
     if not out.approved and not out.skipped:

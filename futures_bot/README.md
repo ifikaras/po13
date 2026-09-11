@@ -22,6 +22,9 @@ Virtual / paper run against live markets (still no real orders):
     python -m futures_bot --status
     python -m futures_bot --loop --every 300 --skip-confirmation
 
+`--status` marks waiting limits / open trades against live Binance futures
+prices and prints starting capital, realized PnL, open PnL, and equity.
+
 `--skip-confirmation` is TA-only (faster). Drop it later if you want OI / social
 confirmation in the loop. `--reset-ledger` clears old paper trades first.
 
