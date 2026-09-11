@@ -16,6 +16,15 @@ Quick start
 That hits the scanner's offline demo (`DEMOUP`) so you can see an approval
 without waiting on a full live scan.
 
+Virtual / paper run against live markets (still no real orders):
+
+    python -m futures_bot --once --reset-ledger --skip-confirmation
+    python -m futures_bot --status
+    python -m futures_bot --loop --every 300 --skip-confirmation
+
+`--skip-confirmation` is TA-only (faster). Drop it later if you want OI / social
+confirmation in the loop. `--reset-ledger` clears old paper trades first.
+
     python -m futures_bot --once          # one live-market scan, still paper orders
     python -m futures_bot --loop --every 300
 

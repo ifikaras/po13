@@ -94,3 +94,21 @@ class PaperLedger:
         self.data["positions"].append(dict(order))
         self.data["daily"]["new_positions"] = self.daily_new() + 1
         return order
+
+    def reset(self) -> None:
+        self.data = self._empty()
+        if self.path.exists():
+            self.path.unlink()
+
+    def status_text(self) -> str:
+        opens = self.open_positions()
+        if not opens:
+            return "paper open: 0"
+        lines = [f"paper open: {len(opens)}"]
+        for pos in opens:
+            lines.append(
+                f"  {pos.get('symbol')} {pos.get('side')} {pos.get('entry_type')} "
+                f"@ {pos.get('planned_entry')} SL={pos.get('stop_loss')} "
+                f"TP1={pos.get('take_profit_1')} qty={pos.get('quantity')}"
+            )
+        return "\n".join(lines)

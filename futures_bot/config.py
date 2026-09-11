@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -79,6 +79,27 @@ class BotConfig:
         if self.scan.limit is not None:
             payload["limit"] = self.scan.limit
         return payload
+
+    def with_scan_overrides(
+        self,
+        *,
+        limit: int | None = None,
+        skip_confirmation: bool = False,
+        skip_social: bool = False,
+        self_test: bool = False,
+    ) -> "BotConfig":
+        updates: dict[str, Any] = {}
+        if limit is not None:
+            updates["limit"] = limit
+        if skip_confirmation:
+            updates["skip_confirmation"] = True
+        if skip_social:
+            updates["skip_social"] = True
+        if self_test:
+            updates["self_test"] = True
+        if not updates:
+            return self
+        return replace(self, scan=replace(self.scan, **updates))
 
 
 def _section(raw: dict[str, Any], key: str) -> dict[str, Any]:

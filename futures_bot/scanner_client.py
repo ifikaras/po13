@@ -46,7 +46,7 @@ class ScannerClient:
     def job_status(self, job_id: str) -> dict[str, Any]:
         return self._request("GET", f"/api/scan/{job_id}/status")
 
-    def wait_for_scan(self, job_id: str, timeout: float = 180.0, poll: float = 1.0) -> dict[str, Any]:
+    def wait_for_scan(self, job_id: str, timeout: float = 600.0, poll: float = 1.0) -> dict[str, Any]:
         deadline = time.monotonic() + timeout
         last: dict[str, Any] = {}
         while time.monotonic() < deadline:
@@ -59,6 +59,6 @@ class ScannerClient:
             time.sleep(poll)
         raise ScannerError(f"scan {job_id} timed out after {timeout:.0f}s (last={last.get('status')})")
 
-    def scan(self, payload: dict[str, Any], timeout: float = 180.0) -> dict[str, Any]:
+    def scan(self, payload: dict[str, Any], timeout: float = 600.0) -> dict[str, Any]:
         job_id = self.start_scan(payload)
         return self.wait_for_scan(job_id, timeout=timeout)

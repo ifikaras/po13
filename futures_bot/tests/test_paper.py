@@ -95,6 +95,23 @@ class PaperCycleTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             load_config(path)
 
+    def test_scan_overrides_limit_and_skip_confirmation(self):
+        config = self._config().with_scan_overrides(limit=20, skip_confirmation=True)
+        payload = config.scan_payload()
+        self.assertEqual(payload["limit"], 20)
+        self.assertTrue(payload["skip_confirmation"])
+
+    def test_reset_clears_open_positions(self):
+        config = self._config()
+        ledger = PaperLedger(self.ledger_path, config.risk.account_size)
+        run_cycle(config, client=FakeScanner([DEMO]), ledger=ledger, notifier=SilentNotifier())
+        self.assertEqual(len(ledger.open_positions()), 1)
+        ledger.reset()
+        self.assertFalse(self.ledger_path.exists())
+        empty = PaperLedger(self.ledger_path, config.risk.account_size)
+        self.assertEqual(empty.open_positions(), [])
+        self.assertIn("paper open: 0", empty.status_text())
+
 
 if __name__ == "__main__":
     unittest.main()
