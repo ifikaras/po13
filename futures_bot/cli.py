@@ -76,7 +76,9 @@ def main(argv: list[str] | None = None) -> int:
         symbols = [str(p.get("symbol") or "") for p in ledger.active_positions()]
         if symbols:
             try:
-                events = ledger.mark_to_market(fetch_mark_prices(symbols))
+                events = ledger.mark_to_market(
+                    fetch_mark_prices(symbols, scanner_url=config.scanner_url)
+                )
                 ledger.save()
                 for event in events:
                     print(f"[paper] {event}")

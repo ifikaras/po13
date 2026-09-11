@@ -74,7 +74,7 @@ def run_cycle(
     symbols = [str(p.get("symbol") or "") for p in ledger.active_positions()]
     try:
         if price_feed is None:
-            prices = fetch_mark_prices(symbols)
+            prices = fetch_mark_prices(symbols, scanner_url=config.scanner_url)
         elif callable(price_feed):
             prices = price_feed(symbols)
         else:
