@@ -1,0 +1,43 @@
+# Paper-trading loop for the Crypto Futures Long-Signal Scanner.
+# This file never places a real order. mode must stay "paper" until a live
+# broker is implemented and you explicitly switch it.
+
+scanner_url: http://80.240.28.61:5000
+mode: paper  # paper only for now
+
+scan:
+  top_n: 100
+  interval: "4h"
+  min_score: 5.0
+  skip_confirmation: false
+  skip_social: false
+  # Set true only when you want the scanner's offline demo data
+  self_test: false
+
+approval:
+  min_score: 5.0
+  # moderate | strong  (case-insensitive; strong also matches "high")
+  min_conviction: moderate
+  min_optimal_rr1: 1.5
+  require_hard_filters: true
+  require_leverage_safe: true
+  require_confirmation: false
+  # If market is more than this % above optimal, wait with a limit at optimal
+  # instead of chasing a market buy.
+  max_chase_pct: 0.8
+
+risk:
+  account_size: 1000
+  risk_pct: 1.0
+  intended_leverage: 3
+  max_open_positions: 3
+  max_daily_new_positions: 5
+
+notify:
+  # stdout is always on. Telegram is optional — a phone ping, not the broker.
+  telegram_enabled: false
+  # Prefer env vars TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID over putting secrets here.
+  telegram_bot_token: ""
+  telegram_chat_id: ""
+
+ledger_path: data/futures_paper.json
