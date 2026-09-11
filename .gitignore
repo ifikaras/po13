@@ -3,3 +3,4 @@ __pycache__/
 .env
 .venv/
 data/current_pick.json
+data/futures_paper.json
